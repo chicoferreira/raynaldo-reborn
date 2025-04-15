@@ -1,3 +1,4 @@
+use crate::app::CameraSettings;
 use crate::raytracer::material::{Dielectric, Lambertian, MaterialType, Metal};
 use crate::raytracer::world::GeometryType::Plane;
 use crate::raytracer::world::{Geometry, GeometryType, World};
@@ -124,5 +125,15 @@ fn main() {
         material: material3,
     });
 
-    app::run(World { geometry });
+    let camera = CameraSettings {
+        position: Vec3::new(-13.0, 2.0, 3.0),
+        yaw: 0.0,
+        pitch: 0.0,
+        fov: 60.0,
+        focus_distance: 10.0,
+        defocus_angle: 0.6,
+        sensibility: 2.0,
+    };
+
+    app::run(World { geometry }, camera);
 }

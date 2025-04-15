@@ -3,7 +3,6 @@ use crate::app::renderer::Renderer;
 use crate::raytracer::camera::Camera;
 use crate::raytracer::world::World;
 use crate::raytracer::Scene;
-use glam::vec3;
 use pollster::FutureExt;
 use rand::prelude::SliceRandom;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
@@ -62,6 +61,7 @@ impl RenderState {
         self.pixel_render_order.shuffle(&mut rand::rng());
 
         self.canvas.resize(len * 4, 0);
+        self.canvas.fill(0);
         self.current_render_pixel = 0;
     }
 }
@@ -78,7 +78,7 @@ struct AppState {
     egui_framework: EguiFramework,
 }
 
-pub(crate) fn run(world: World) {
+pub(crate) fn run(world: World, camera_settings: CameraSettings) {
     let app = winit_app::WinitApp::new(
         |event_loop| {
             event_loop
@@ -107,17 +107,7 @@ pub(crate) fn run(world: World) {
                 max_ray_depth: 10,
                 time_budget_ms: 10,
                 scene: Scene::new(
-                    Camera::new(
-                        renderer.width(),
-                        renderer.height(),
-                        60.0,
-                        vec3(0.0, 0.0, 0.0),
-                        -90.0,
-                        0.0,
-                        2.0,
-                        3.4,
-                        10.0,
-                    ),
+                    camera_settings.to_camera(renderer.width(), renderer.height()),
                     world.clone(),
                 ),
                 last_fps_update: (Instant::now(), 0.0),
@@ -134,10 +124,12 @@ pub(crate) fn run(world: World) {
             }
 
             if let Some(size) = input.window_resized() {
-                state.renderer.update_size(size.width, size.height);
-                state.egui_framework.resize(size.width, size.height);
-                state.scene.update_screen_size(size.width, size.height);
-                state.render_state.on_resize(size.width, size.height);
+                if size.width != 0 && size.height != 0 {
+                    state.renderer.update_size(size.width, size.height);
+                    state.egui_framework.resize(size.width, size.height);
+                    state.scene.update_screen_size(size.width, size.height);
+                    state.render_state.on_resize(size.width, size.height);
+                }
             }
 
             if let Some(scale_factor) = input.scale_factor() {
@@ -247,4 +239,31 @@ pub(crate) fn run(world: World) {
     );
 
     app.run().unwrap()
+}
+
+#[derive(Clone)]
+pub struct CameraSettings {
+    pub position: glam::Vec3,
+    pub yaw: f32,
+    pub pitch: f32,
+    pub fov: f32,
+    pub focus_distance: f32,
+    pub defocus_angle: f32,
+    pub sensibility: f32,
+}
+
+impl CameraSettings {
+    fn to_camera(&self, width: u32, height: u32) -> Camera {
+        Camera::new(
+            width,
+            height,
+            self.fov,
+            self.position,
+            self.yaw,
+            self.pitch,
+            self.sensibility,
+            self.focus_distance,
+            self.defocus_angle,
+        )
+    }
 }
