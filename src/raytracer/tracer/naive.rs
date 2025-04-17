@@ -2,6 +2,7 @@ use crate::raytracer::tracer::{TraceResult, Tracer};
 use crate::raytracer::world::{GeometryType, Ray};
 use enum_dispatch::enum_dispatch;
 use glam::Vec3;
+use std::f32::consts::PI;
 use std::ops::RangeBounds;
 
 pub struct NaiveTracer {
@@ -17,10 +18,11 @@ impl NaiveTracer {
                     center: *center,
                     radius: *radius,
                 }),
-                GeometryType::Plane { point, normal } => NaiveObject::NaivePlane(NaivePlane {
-                    point: *point,
-                    normal: *normal,
-                }),
+                GeometryType::Quad {
+                    origin: point,
+                    u,
+                    v,
+                } => NaiveObject::NaiveQuad(NaiveQuad::new(*point, *u, *v)),
             })
             .collect();
         Self { objects }
@@ -48,20 +50,7 @@ impl Tracer for NaiveTracer {
 #[enum_dispatch(Hittable)]
 enum NaiveObject {
     NaiveSphere,
-    NaivePlane,
-}
-
-impl Into<NaiveObject> for GeometryType {
-    fn into(self) -> NaiveObject {
-        match self {
-            GeometryType::Sphere { center, radius } => {
-                NaiveObject::NaiveSphere(NaiveSphere { center, radius })
-            }
-            GeometryType::Plane { point, normal } => {
-                NaiveObject::NaivePlane(NaivePlane { point, normal })
-            }
-        }
-    }
+    NaiveQuad,
 }
 
 #[enum_dispatch]
@@ -75,9 +64,26 @@ struct NaiveSphere {
     radius: f32,
 }
 
-struct NaivePlane {
-    point: Vec3,
+struct NaiveQuad {
+    origin: Vec3,
+    u: Vec3,
+    v: Vec3,
     normal: Vec3,
+    d: f32,
+}
+
+impl NaiveQuad {
+    fn new(origin: Vec3, u: Vec3, v: Vec3) -> Self {
+        let normal = u.cross(v).normalize();
+        let d = normal.dot(origin);
+        Self {
+            origin,
+            u,
+            v,
+            normal,
+            d,
+        }
+    }
 }
 
 impl Hittable for NaiveSphere {
@@ -107,34 +113,53 @@ impl Hittable for NaiveSphere {
         let front_face = ray.direction.dot(normal) < 0.0;
         let normal = if front_face { normal } else { -normal };
 
+        let theta = (-point.y).acos();
+        let phi = (-point.z).atan2(point.x) + PI;
+
+        let u = phi / (2.0 * PI);
+        let v = theta / PI;
+
         Some(TraceResult {
             distance: t,
             point,
             normal,
             geometry_index: index,
             front_face,
+            uv: (u, v),
         })
     }
 }
 
-impl Hittable for NaivePlane {
+impl Hittable for NaiveQuad {
     fn hit(&self, index: usize, ray: &Ray, range: &impl RangeBounds<f32>) -> Option<TraceResult> {
-        let denom = self.normal.dot(ray.direction);
-        if denom.abs() < 1e-6 {
-            return None; // Ray is parallel to the plane
+        let denominator = self.normal.dot(ray.direction);
+
+        if denominator.abs() < 1e-6 {
+            return None;
         }
-        let t = (self.point - ray.origin).dot(self.normal) / denom;
-        if !range.contains(&t) {
-            return None; // Intersection is outside the range
+
+        let distance = (self.d - self.normal.dot(ray.origin)) / denominator;
+        if !range.contains(&distance) {
+            return None;
         }
-        let point = ray.at(t);
-        let front_face = ray.direction.dot(self.normal) < 0.0;
+
+        let point = ray.at(distance);
+        let vector_in_plane = point - self.origin;
+
+        let u_coord = vector_in_plane.dot(self.u) / self.u.length_squared();
+        let v_coord = vector_in_plane.dot(self.v) / self.v.length_squared();
+
+        if u_coord < 0.0 || u_coord > 1.0 || v_coord < 0.0 || v_coord > 1.0 {
+            return None;
+        }
+
         Some(TraceResult {
-            distance: t,
+            distance,
             point,
             normal: self.normal,
             geometry_index: index,
-            front_face,
+            front_face: ray.direction.dot(self.normal) < 0.0,
+            uv: (u_coord, v_coord),
         })
     }
 }

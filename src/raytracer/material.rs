@@ -1,3 +1,4 @@
+use crate::raytracer::material::texture::Texture;
 use crate::raytracer::tracer::TraceResult;
 use crate::raytracer::world::Ray;
 use enum_dispatch::enum_dispatch;
@@ -23,7 +24,7 @@ pub enum MaterialType {
 
 #[derive(Clone)]
 pub struct Lambertian {
-    pub albedo: Vec4,
+    pub texture: Texture,
 }
 
 impl Material for Lambertian {
@@ -36,7 +37,7 @@ impl Material for Lambertian {
         }
 
         Some(ScatterResult {
-            attenuation: self.albedo,
+            attenuation: self.texture.sample(trace_result.uv),
             scattered: Ray::new(trace_result.point, scatter_direction),
         })
     }
@@ -111,6 +112,40 @@ fn random_unit_vector() -> Vec3 {
         let length = random_vec.length_squared();
         if length <= 1.0 && length > 0.1 {
             return random_vec / length.sqrt();
+        }
+    }
+}
+
+pub mod texture {
+    use glam::Vec4;
+
+    #[derive(Clone)]
+    pub enum Texture {
+        Solid {
+            color: Vec4,
+        },
+        Checker {
+            color1: Vec4,
+            color2: Vec4,
+            scale: f32,
+        },
+    }
+
+    impl Texture {
+        pub fn sample(&self, uv: (f32, f32)) -> Vec4 {
+            match self {
+                Texture::Solid { color } => *color,
+                Texture::Checker {
+                    color1,
+                    color2,
+                    scale,
+                } => {
+                    let x = (uv.0 / scale).floor() as i32;
+                    let y = (uv.1 / scale).floor() as i32;
+
+                    if (x + y) % 2 == 0 { *color1 } else { *color2 }
+                }
+            }
         }
     }
 }

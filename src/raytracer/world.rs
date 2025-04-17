@@ -30,5 +30,5 @@ pub struct Geometry {
 #[derive(Clone)]
 pub enum GeometryType {
     Sphere { center: Vec3, radius: f32 },
-    Plane { point: Vec3, normal: Vec3 },
+    Quad { origin: Vec3, u: Vec3, v: Vec3 },
 }

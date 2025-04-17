@@ -12,6 +12,7 @@ pub struct TraceResult {
     pub normal: Vec3,
     pub geometry_index: usize,
     pub front_face: bool,
+    pub uv: (f32, f32),
 }
 
 #[enum_dispatch]
