@@ -16,3 +16,4 @@ winit = "0.30.9"
 winit_input_helper = { git = "https://github.com/mrfoogles/winit_input_helper", branch = "main" }
 glam = { version = "0.30.1", features = ["rand"] }
 enum_dispatch = "0.3.13"
+image = "0.25.6"

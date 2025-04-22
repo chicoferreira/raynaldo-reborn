@@ -118,6 +118,7 @@ fn random_unit_vector() -> Vec3 {
 
 pub mod texture {
     use glam::Vec4;
+    use image::Rgba32FImage;
 
     #[derive(Clone)]
     pub enum Texture {
@@ -129,10 +130,13 @@ pub mod texture {
             color2: Vec4,
             scale: f32,
         },
+        Image {
+            image: Rgba32FImage,
+        },
     }
 
     impl Texture {
-        pub fn sample(&self, uv: (f32, f32)) -> Vec4 {
+        pub fn sample(&self, (u, v): (f32, f32)) -> Vec4 {
             match self {
                 Texture::Solid { color } => *color,
                 Texture::Checker {
@@ -140,10 +144,15 @@ pub mod texture {
                     color2,
                     scale,
                 } => {
-                    let x = (uv.0 / scale).floor() as i32;
-                    let y = (uv.1 / scale).floor() as i32;
+                    let x = (u / scale).floor() as i32;
+                    let y = (v / scale).floor() as i32;
 
                     if (x + y) % 2 == 0 { *color1 } else { *color2 }
+                }
+                Texture::Image { image } => {
+                    let pixel = image::imageops::sample_bilinear(image, u, 1.0 - v)
+                        .expect("UV is inbounds");
+                    Vec4::new(pixel[0], pixel[1], pixel[2], pixel[3])
                 }
             }
         }

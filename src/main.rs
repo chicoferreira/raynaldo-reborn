@@ -14,15 +14,15 @@ fn main() {
         },
     });
     let back_green = MaterialType::Lambertian(Lambertian {
-        texture: Texture::Checker {
-            color1: Vec4::new(0.2, 1.0, 0.2, 1.0),
-            color2: Vec4::new(1.0, 1.0, 1.0, 1.0),
-            scale: 0.5,
+        texture: Texture::Image {
+            image: image::open("img.png").unwrap().into_rgba32f(),
         },
     });
     let right_blue = MaterialType::Lambertian(Lambertian {
-        texture: Texture::Solid {
-            color: Vec4::new(0.2, 0.2, 1.0, 1.0),
+        texture: Texture::Checker {
+            color1: Vec4::new(0.2, 0.2, 1.0, 1.0),
+            color2: Vec4::new(1.0, 1.0, 1.0, 1.0),
+            scale: 0.5,
         },
     });
     let upper_orange = MaterialType::Lambertian(Lambertian {
@@ -89,7 +89,6 @@ fn main() {
         fov: 80.0,
         focus_distance: 10.0,
         defocus_angle: 0.0,
-        sensibility: 2.0,
     };
 
     app::run(World { geometry }, camera);

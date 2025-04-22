@@ -107,7 +107,7 @@ pub(crate) fn run(world: World, camera_settings: CameraSettings) {
                 max_ray_depth: 10,
                 time_budget_ms: 10,
                 scene: Scene::new(
-                    camera_settings.to_camera(renderer.width(), renderer.height()),
+                    camera_settings.to_camera(renderer.width(), renderer.height(), 2.0),
                     world.clone(),
                 ),
                 last_fps_update: (Instant::now(), 0.0),
@@ -249,11 +249,10 @@ pub struct CameraSettings {
     pub fov: f32,
     pub focus_distance: f32,
     pub defocus_angle: f32,
-    pub sensibility: f32,
 }
 
 impl CameraSettings {
-    fn to_camera(&self, width: u32, height: u32) -> Camera {
+    fn to_camera(&self, width: u32, height: u32, sensibility: f32) -> Camera {
         Camera::new(
             width,
             height,
@@ -261,7 +260,7 @@ impl CameraSettings {
             self.position,
             self.yaw,
             self.pitch,
-            self.sensibility,
+            sensibility,
             self.focus_distance,
             self.defocus_angle,
         )
