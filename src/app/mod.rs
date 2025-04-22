@@ -17,48 +17,68 @@ mod renderer;
 mod winit_app;
 
 struct RenderState {
-    pixel_render_order: Vec<usize>,
+    pixel_render_orders: Vec<Vec<usize>>,
+    current_pixel_render_order: usize,
     current_render_pixel: usize,
     canvas: Vec<u8>,
 }
 
 impl RenderState {
+    fn generate_pixel_render_orders(len: usize) -> Vec<Vec<usize>> {
+        const NUMBER_OF_ORDERS: usize = 10;
+
+        (0..NUMBER_OF_ORDERS)
+            .map(|_| {
+                let mut pixel_render_order: Vec<_> = (0..len).collect();
+                pixel_render_order.shuffle(&mut rand::rng());
+                pixel_render_order
+            })
+            .collect()
+    }
+
     fn new(width: u32, height: u32) -> Self {
         let len = (width * height) as usize;
-        let mut pixel_render_order: Vec<_> = (0..len).collect();
-        pixel_render_order.shuffle(&mut rand::rng());
-
+        let pixel_render_orders = Self::generate_pixel_render_orders(len);
         let canvas = vec![0; len * 4];
 
         Self {
-            pixel_render_order,
+            pixel_render_orders,
+            current_pixel_render_order: 0,
             current_render_pixel: 0,
             canvas,
         }
     }
 
+    fn get_current_pixel_order(&self) -> &[usize] {
+        &self.pixel_render_orders[self.current_pixel_render_order]
+    }
+
     fn is_finished(&self) -> bool {
-        self.current_render_pixel == self.pixel_render_order.len()
+        self.current_render_pixel == self.get_current_pixel_order().len()
     }
 
     fn missing_pixels(&self) -> usize {
-        self.pixel_render_order.len() - self.current_render_pixel
+        self.get_current_pixel_order().len() - self.current_render_pixel
     }
 
     fn restore_canvas(&mut self) {
         self.canvas.fill(0);
         self.current_render_pixel = 0;
+        self.current_pixel_render_order =
+            (self.current_pixel_render_order + 1) % self.pixel_render_orders.len();
     }
 
     fn progress(&self) -> f32 {
-        self.current_render_pixel as f32 / (self.pixel_render_order.len() as f32)
+        self.current_render_pixel as f32 / (self.get_current_pixel_order().len() as f32)
     }
 
     fn on_resize(&mut self, width: u32, height: u32) {
         let len = (width * height) as usize;
-        self.pixel_render_order.clear();
-        self.pixel_render_order.extend(0..len);
-        self.pixel_render_order.shuffle(&mut rand::rng());
+        for pixel_render_order in self.pixel_render_orders.iter_mut() {
+            pixel_render_order.clear();
+            pixel_render_order.extend(0..len);
+            pixel_render_order.shuffle(&mut rand::rng());
+        }
 
         self.canvas.resize(len * 4, 0);
         self.canvas.fill(0);
@@ -192,7 +212,8 @@ pub(crate) fn run(world: World, camera_settings: CameraSettings) {
                 let size = PIXEL_BATCH_SIZE.min(state.render_state.missing_pixels());
                 let end = state.render_state.current_render_pixel + size;
 
-                state.render_state.pixel_render_order[state.render_state.current_render_pixel..end]
+                state.render_state.get_current_pixel_order()
+                    [state.render_state.current_render_pixel..end]
                     .par_iter()
                     .for_each(|&index_in_buffer| {
                         let x = index_in_buffer as u32 % width;
