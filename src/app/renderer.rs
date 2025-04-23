@@ -105,7 +105,7 @@ impl Renderer {
             .unwrap();
 
         let surface_capabilities = surface.get_capabilities(&adapter);
-        let surface_format = wgpu::TextureFormat::Rgba8UnormSrgb;
+        let surface_format = wgpu::TextureFormat::Bgra8UnormSrgb;
 
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: Some("canvas_bind_group_layout"),
