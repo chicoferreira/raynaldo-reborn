@@ -1,7 +1,7 @@
 use crate::app::CameraSettings;
 use crate::raytracer::material::texture::Texture;
 use crate::raytracer::material::{Dielectric, Lambertian, MaterialType, Metal};
-use crate::raytracer::world::GeometryType::Sphere;
+use crate::raytracer::world::GeometryType::{Quad, Sphere};
 use crate::raytracer::world::{Geometry, World};
 use glam::Vec3;
 
@@ -101,9 +101,10 @@ fn main() {
     });
 
     geometry.push(Geometry {
-        geometry_type: Sphere {
-            center: Vec3::new(0.0, -1000.0, 0.0),
-            radius: 1000.0,
+        geometry_type: Quad {
+            origin: Vec3::new(-100.0, 0.0, -100.0),
+            u: Vec3::new(200.0, 0.0, 0.0),
+            v: Vec3::new(0.0, 0.0, 200.0),
         },
         material: ground_material,
     });

@@ -17,9 +17,15 @@ mod renderer;
 mod winit_app;
 
 struct RenderState {
+    /// The pixel render orders are used to randomize the order in which pixels are rendered.
+    /// There are multiple orders to avoid generating each frame when moving the camera.
+    /// Instead we just switch between them.
     pixel_render_orders: Vec<Vec<usize>>,
+    /// Tracks the current pixel render order.
     current_pixel_render_order: usize,
+    /// The current pixel being rendered.
     current_render_pixel: usize,
+    /// The canvas that holds the current image to be presented in the screen.
     canvas: Vec<u8>,
 }
 

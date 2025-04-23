@@ -153,12 +153,20 @@ impl Hittable for NaiveQuad {
             return None;
         }
 
+        let front_face = ray.direction.dot(self.normal) < 0.0;
+
+        let hit_normal = if front_face {
+            self.normal
+        } else {
+            -self.normal
+        };
+
         Some(TraceResult {
             distance,
             point,
-            normal: self.normal,
+            normal: hit_normal,
             geometry_index: index,
-            front_face: ray.direction.dot(self.normal) < 0.0,
+            front_face,
             uv: (u_coord, v_coord),
         })
     }
