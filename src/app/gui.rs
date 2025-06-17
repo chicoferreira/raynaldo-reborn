@@ -89,7 +89,7 @@ impl AppState {
 
                 ui.horizontal(|ui| {
                     ui.label("Render progress:");
-                    let progress = self.render_state.progress();
+                    let progress = self.render_state.progress(self.samples_per_pixel);
                     ui.add(
                         egui::ProgressBar::new(progress)
                             .show_percentage()

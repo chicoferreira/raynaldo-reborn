@@ -1,8 +1,8 @@
 use crate::app::gui_framework::EguiFramework;
 use crate::app::renderer::Renderer;
+use crate::raytracer::Scene;
 use crate::raytracer::camera::Camera;
 use crate::raytracer::world::World;
-use crate::raytracer::Scene;
 use pollster::FutureExt;
 use rand::prelude::SliceRandom;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
@@ -25,13 +25,18 @@ struct RenderState {
     current_pixel_render_order: usize,
     /// The current pixel being rendered.
     current_render_pixel: usize,
-    /// The canvas that holds the current image to be presented in the screen.
-    canvas: Vec<u8>,
+    /// The canvas that holds the accumulated values: (r_sum, g_sum, b_sum, sample_count)
+    canvas: Vec<(f32, f32, f32, u8)>,
+    /// The total number of samples that have been rendered.
+    /// This needs to be equal to height * width * samples_per_pixel to be considered finished.
+    total_rendered_pixel_samples: usize,
+    /// The number of samples per pixel that have been rendered.
+    rendered_samples: u8,
 }
 
 impl RenderState {
     fn generate_pixel_render_orders(len: usize) -> Vec<Vec<usize>> {
-        const NUMBER_OF_ORDERS: usize = 10;
+        const NUMBER_OF_ORDERS: usize = 5;
 
         (0..NUMBER_OF_ORDERS)
             .map(|_| {
@@ -45,12 +50,14 @@ impl RenderState {
     fn new(width: u32, height: u32) -> Self {
         let len = (width * height) as usize;
         let pixel_render_orders = Self::generate_pixel_render_orders(len);
-        let canvas = vec![0; len * 4];
+        let canvas = vec![(0.0, 0.0, 0.0, 0); len];
 
         Self {
             pixel_render_orders,
             current_pixel_render_order: 0,
             current_render_pixel: 0,
+            total_rendered_pixel_samples: 0,
+            rendered_samples: 0,
             canvas,
         }
     }
@@ -59,23 +66,54 @@ impl RenderState {
         &self.pixel_render_orders[self.current_pixel_render_order]
     }
 
-    fn is_finished(&self) -> bool {
-        self.current_render_pixel == self.get_current_pixel_order().len()
+    fn is_finished(&self, samples_per_pixel: u32) -> bool {
+        self.missing_pixels(samples_per_pixel) == 0
     }
 
-    fn missing_pixels(&self) -> usize {
+    fn is_finished_current_order(&self) -> bool {
+        self.missing_pixels_in_current_order() == 0
+    }
+
+    fn missing_pixels_in_current_order(&self) -> usize {
         self.get_current_pixel_order().len() - self.current_render_pixel
     }
 
+    fn total_pixels_to_render(&self, samples_per_pixel: u32) -> usize {
+        self.canvas.len() * samples_per_pixel as usize
+    }
+
+    fn missing_pixels(&self, samples_per_pixel: u32) -> usize {
+        self.total_pixels_to_render(samples_per_pixel) - self.total_rendered_pixel_samples
+    }
+
     fn restore_canvas(&mut self) {
-        self.canvas.fill(0);
+        self.canvas.fill((0.0, 0.0, 0.0, 0));
         self.current_render_pixel = 0;
         self.current_pixel_render_order =
             (self.current_pixel_render_order + 1) % self.pixel_render_orders.len();
+        self.rendered_samples = 0;
+        self.total_rendered_pixel_samples = 0;
     }
 
-    fn progress(&self) -> f32 {
-        self.current_render_pixel as f32 / (self.get_current_pixel_order().len() as f32)
+    fn progress(&self, samples_per_pixel: u32) -> f32 {
+        self.total_rendered_pixel_samples as f32
+            / self.total_pixels_to_render(samples_per_pixel) as f32
+    }
+
+    fn to_bytes(&self) -> Vec<u8> {
+        let mut bytes = Vec::with_capacity(self.canvas.len() * 4);
+        for (r_sum, g_sum, b_sum, sample_count) in &self.canvas {
+            if *sample_count > 0 {
+                let r = ((r_sum / *sample_count as f32) * 255.0).clamp(0.0, 255.0) as u8;
+                let g = ((g_sum / *sample_count as f32) * 255.0).clamp(0.0, 255.0) as u8;
+                let b = ((b_sum / *sample_count as f32) * 255.0).clamp(0.0, 255.0) as u8;
+                let a = 255u8;
+                bytes.extend_from_slice(&[r, g, b, a]);
+            } else {
+                bytes.extend_from_slice(&[0, 0, 0, 255]);
+            }
+        }
+        bytes
     }
 
     fn on_resize(&mut self, width: u32, height: u32) {
@@ -86,9 +124,8 @@ impl RenderState {
             pixel_render_order.shuffle(&mut rand::rng());
         }
 
-        self.canvas.resize(len * 4, 0);
-        self.canvas.fill(0);
-        self.current_render_pixel = 0;
+        self.canvas.resize(len, (0.0, 0.0, 0.0, 0));
+        self.restore_canvas();
     }
 }
 
@@ -203,11 +240,11 @@ pub(crate) fn run(world: World, camera_settings: CameraSettings) {
             const PIXEL_BATCH_SIZE: usize = 10000;
 
             let instant = Instant::now();
-            while !state.render_state.is_finished()
+            while !state.render_state.is_finished(state.samples_per_pixel)
                 && instant.elapsed() < Duration::from_millis(state.time_budget_ms)
             {
                 #[derive(Copy, Clone)]
-                struct BufferWrapper(*mut u8);
+                struct BufferWrapper(*mut (f32, f32, f32, u8));
 
                 // SAFETY: this is safe because no simultaneous access to the same index happens
                 unsafe impl Send for BufferWrapper {}
@@ -215,7 +252,8 @@ pub(crate) fn run(world: World, camera_settings: CameraSettings) {
 
                 let buffer_ptr = BufferWrapper(state.render_state.canvas.as_mut_ptr());
 
-                let size = PIXEL_BATCH_SIZE.min(state.render_state.missing_pixels());
+                let size =
+                    PIXEL_BATCH_SIZE.min(state.render_state.missing_pixels_in_current_order());
                 let end = state.render_state.current_render_pixel + size;
 
                 state.render_state.get_current_pixel_order()
@@ -224,34 +262,40 @@ pub(crate) fn run(world: World, camera_settings: CameraSettings) {
                     .for_each(|&index_in_buffer| {
                         let x = index_in_buffer as u32 % width;
                         let y = index_in_buffer as u32 / width;
-                        let color = state.scene.render_pixel(
-                            x,
-                            y,
-                            state.samples_per_pixel,
-                            state.max_ray_depth,
-                        );
-
-                        let index = index_in_buffer * 4;
+                        let color = state.scene.render_sample(x, y, state.max_ray_depth);
 
                         // SAFETY: this is safe because pixel_render_order
                         // has unique indices to the buffer
                         unsafe {
-                            // copy the buffer, otherwise the compiler only sees that only
+                            // accumulate to the buffer, otherwise the compiler only sees that only
                             // buffer_ptr.0 is being used, and captures that instead
                             let buffer_ptr = buffer_ptr;
-                            *buffer_ptr.0.add(index) = (color.x * 255.0) as u8;
-                            *buffer_ptr.0.add(index + 1) = (color.y * 255.0) as u8;
-                            *buffer_ptr.0.add(index + 2) = (color.z * 255.0) as u8;
-                            *buffer_ptr.0.add(index + 3) = (color.w * 255.0) as u8;
+                            let buffer_ptr = buffer_ptr.0.add(index_in_buffer);
+
+                            (*buffer_ptr).0 += color.x;
+                            (*buffer_ptr).1 += color.y;
+                            (*buffer_ptr).2 += color.z;
+                            (*buffer_ptr).3 += 1;
                         }
                     });
 
                 state.render_state.current_render_pixel += size;
+                state.render_state.total_rendered_pixel_samples += size;
+
+                // Reset the pixel render order if the render is not finished (number of samples for each pixel has not been reached)
+                if state.render_state.is_finished_current_order()
+                    && !state.render_state.is_finished(state.samples_per_pixel)
+                {
+                    state.render_state.current_render_pixel = 0;
+                    state.render_state.rendered_samples += 1;
+                    // TODO: change the pixel render order
+                }
             }
 
+            let canvas_bytes = state.render_state.to_bytes();
             state
                 .renderer
-                .render_with(&state.render_state.canvas, |renderer, encoder, view| {
+                .render_with(&canvas_bytes, |renderer, encoder, view| {
                     state
                         .egui_framework
                         .render(&renderer.device, &renderer.queue, encoder, view);

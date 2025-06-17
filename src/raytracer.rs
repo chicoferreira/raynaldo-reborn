@@ -47,6 +47,11 @@ impl Scene {
         color / samples_per_pixel as f32
     }
 
+    pub fn render_sample(&self, x: u32, y: u32, max_depth: u32) -> Vec4 {
+        let ray = self.camera.generate_ray(x, y, &mut rng());
+        self.render_ray(&ray, max_depth)
+    }
+
     fn render_ray(&self, ray: &Ray, max_depth: u32) -> Vec4 {
         if max_depth == 0 {
             return Vec4::ZERO;
