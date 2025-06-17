@@ -1,6 +1,6 @@
 use crate::app::AppState;
-use egui::emath::Numeric;
 use egui::Ui;
+use egui::emath::Numeric;
 use glam::Vec3;
 
 impl AppState {

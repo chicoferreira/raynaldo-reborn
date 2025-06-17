@@ -1,13 +1,11 @@
-use crate::raytracer::tracer::Tracer;
 pub mod camera;
 pub mod material;
 pub mod tracer;
 pub mod world;
 
 use crate::raytracer::camera::Camera;
-use crate::raytracer::material::Material;
 use crate::raytracer::world::{Ray, World};
-use glam::{vec4, Vec4};
+use glam::{Vec4, vec4};
 use rand::rng;
 use tracer::naive::NaiveTracer;
 

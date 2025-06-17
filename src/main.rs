@@ -1,6 +1,6 @@
 use crate::app::CameraSettings;
+use crate::raytracer::material::MaterialType;
 use crate::raytracer::material::texture::Texture;
-use crate::raytracer::material::{Dielectric, Lambertian, MaterialType, Metal};
 use crate::raytracer::world::GeometryType::{Quad, Sphere};
 use crate::raytracer::world::{Geometry, World};
 use glam::Vec3;
@@ -94,11 +94,11 @@ fn main() {
 
     let mut geometry = vec![];
 
-    let ground_material = MaterialType::Lambertian(Lambertian {
+    let ground_material = MaterialType::Lambertian {
         texture: Texture::Solid {
             color: glam::vec4(0.5, 0.5, 0.5, 1.0),
         },
-    });
+    };
 
     geometry.push(Geometry {
         geometry_type: Quad {
@@ -134,9 +134,9 @@ fn main() {
                         rand::random::<f32>(),
                         1.0,
                     );
-                    sphere_material = MaterialType::Lambertian(Lambertian {
+                    sphere_material = MaterialType::Lambertian {
                         texture: Texture::Solid { color: albedo },
-                    });
+                    };
                     geometry.push(Geometry {
                         geometry_type: Sphere {
                             center,
@@ -153,10 +153,10 @@ fn main() {
                         1.0,
                     );
                     let fuzz = rand::random::<f32>() * 0.5;
-                    sphere_material = MaterialType::Metal(Metal {
+                    sphere_material = MaterialType::Metal {
                         albedo,
                         fuzziness: fuzz,
-                    });
+                    };
                     geometry.push(Geometry {
                         geometry_type: Sphere {
                             center,
@@ -166,9 +166,9 @@ fn main() {
                     });
                 } else {
                     // glass
-                    sphere_material = MaterialType::Dielectric(Dielectric {
+                    sphere_material = MaterialType::Dielectric {
                         refractive_index: 1.5,
-                    });
+                    };
                     geometry.push(Geometry {
                         geometry_type: Sphere {
                             center,
@@ -181,9 +181,9 @@ fn main() {
         }
     }
 
-    let material1 = MaterialType::Dielectric(Dielectric {
+    let material1 = MaterialType::Dielectric {
         refractive_index: 1.5,
-    });
+    };
     geometry.push(Geometry {
         geometry_type: Sphere {
             center: Vec3::new(0.0, 1.0, 0.0),
@@ -192,13 +192,13 @@ fn main() {
         material: material1,
     });
 
-    let material2 = MaterialType::Lambertian(Lambertian {
+    let material2 = MaterialType::Lambertian {
         texture: Texture::Checker {
             color1: glam::vec4(0.2, 0.3, 0.1, 1.0),
             color2: glam::vec4(0.9, 0.9, 0.9, 1.0),
             scale: 10.0,
         },
-    });
+    };
     geometry.push(Geometry {
         geometry_type: Sphere {
             center: Vec3::new(-4.0, 1.0, 0.0),
@@ -206,10 +206,10 @@ fn main() {
         },
         material: material2,
     });
-    let material3 = MaterialType::Metal(Metal {
+    let material3 = MaterialType::Metal {
         albedo: glam::vec4(0.7, 0.6, 0.5, 1.0),
         fuzziness: 0.0,
-    });
+    };
     geometry.push(Geometry {
         geometry_type: Sphere {
             center: Vec3::new(4.0, 1.0, 0.0),

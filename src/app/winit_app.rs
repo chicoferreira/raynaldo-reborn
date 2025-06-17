@@ -8,7 +8,6 @@ use winit::event_loop::{ActiveEventLoop, EventLoop};
 use winit::window::{Window, WindowId};
 use winit_input_helper::WinitInputHelper;
 
-
 pub struct WinitApp<S, Init, InitSurface, InputProcessor, RawWindowEventHandler, Render> {
     init: Init,
     init_surface: InitSurface,

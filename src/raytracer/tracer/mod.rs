@@ -2,7 +2,6 @@ pub mod naive;
 
 use crate::raytracer::tracer::naive::NaiveTracer;
 use crate::raytracer::world::Ray;
-use enum_dispatch::enum_dispatch;
 use glam::Vec3;
 use std::ops::RangeBounds;
 
@@ -15,12 +14,14 @@ pub struct TraceResult {
     pub uv: (f32, f32),
 }
 
-#[enum_dispatch]
-pub trait Tracer {
-    fn trace(&self, ray: &Ray, bounds: &impl RangeBounds<f32>) -> Option<TraceResult>;
+pub enum TracerType {
+    NaiveTracer(NaiveTracer),
 }
 
-#[enum_dispatch(Tracer)]
-pub enum TracerType {
-    NaiveTracer,
+impl TracerType {
+    pub fn trace(&self, ray: &Ray, bounds: &impl RangeBounds<f32>) -> Option<TraceResult> {
+        match self {
+            TracerType::NaiveTracer(tracer) => tracer.trace(ray, bounds),
+        }
+    }
 }
