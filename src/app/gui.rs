@@ -70,11 +70,15 @@ impl AppState {
                 });
                 ui.horizontal(|ui| {
                     ui.label("Samples per pixel:");
+                    let old_samples_per_pixel = self.samples_per_pixel;
                     let drag_samples_per_pixel = egui::DragValue::new(&mut self.samples_per_pixel)
                         .speed(1.0)
-                        .range(1..=1000);
+                        .range(1..=2000);
                     if ui.add(drag_samples_per_pixel).changed() {
-                        self.render_state.restore_canvas();
+                        // Only reset if decreased
+                        if self.samples_per_pixel < old_samples_per_pixel {
+                            self.render_state.restore_canvas();
+                        }
                     }
                 });
                 ui.horizontal(|ui| {
