@@ -3,12 +3,31 @@ use crate::raytracer::material::texture::Texture;
 use crate::raytracer::material::MaterialType;
 use crate::raytracer::world::GeometryType::{Quad, Sphere};
 use crate::raytracer::world::{Geometry, World};
+use clap::Parser;
 use glam::Vec3;
 
 mod app;
 mod raytracer;
 
+#[derive(Parser, Debug)]
+#[command(name = "raynaldo-reborn")]
+#[command(about = "A ray tracer with multiple backend options")]
+struct Args {
+    /// Tracer type to use for ray tracing
+    #[arg(short, long, value_enum, default_value_t = TracerTypeArg::Embree)]
+    tracer: TracerTypeArg,
+}
+
+#[derive(clap::ValueEnum, Clone, Copy, Debug)]
+enum TracerTypeArg {
+    /// Use the naive ray tracer implementation
+    Naive,
+    /// Use the Embree ray tracer implementation
+    Embree,
+}
+
 fn main() {
+    let args = Args::parse();
     let mut geometry = vec![];
 
     let ground_material = MaterialType::Lambertian {
@@ -144,5 +163,5 @@ fn main() {
         defocus_angle: 0.6,
     };
 
-    app::run(World { geometry }, camera);
+    app::run(World { geometry }, camera, args.tracer);
 }

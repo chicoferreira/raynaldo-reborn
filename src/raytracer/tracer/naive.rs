@@ -1,5 +1,5 @@
 use crate::raytracer::tracer::TraceResult;
-use crate::raytracer::world::{GeometryType, Ray};
+use crate::raytracer::world::{Geometry, GeometryType, Ray};
 use glam::Vec3;
 use std::f32::consts::PI;
 use std::ops::RangeBounds;
@@ -9,11 +9,11 @@ pub struct NaiveTracer {
 }
 
 impl NaiveTracer {
-    pub fn new(geometry: &[GeometryType]) -> Self {
+    pub fn new(geometry: &[Geometry]) -> Self {
         let mut objects = Vec::new();
 
-        for (index, geometry) in geometry.iter().enumerate() {
-            match geometry {
+        for (index, geom) in geometry.iter().enumerate() {
+            match &geom.geometry_type {
                 GeometryType::Sphere { center, radius } => {
                     objects.push(NaiveObject {
                         geometry_index: index,

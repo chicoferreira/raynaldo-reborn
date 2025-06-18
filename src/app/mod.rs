@@ -141,7 +141,7 @@ struct AppState {
     egui_framework: EguiFramework,
 }
 
-pub(crate) fn run(world: World, camera_settings: CameraSettings) {
+pub(crate) fn run(world: World, camera_settings: CameraSettings, tracer_type: crate::TracerTypeArg) {
     let app = winit_app::WinitApp::new(
         |event_loop| {
             event_loop
@@ -172,6 +172,7 @@ pub(crate) fn run(world: World, camera_settings: CameraSettings) {
                 scene: Scene::new(
                     camera_settings.to_camera(renderer.width(), renderer.height(), 2.0),
                     world.clone(),
+                    tracer_type,
                 ),
                 last_fps_update: (Instant::now(), 0.0),
                 last_frame: Instant::now(),

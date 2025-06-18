@@ -5,6 +5,7 @@ pub mod world;
 
 use crate::raytracer::camera::Camera;
 use crate::raytracer::tracer::embree::EmbreeRayTracer;
+use crate::raytracer::tracer::naive::NaiveTracer;
 use crate::raytracer::world::{Ray, World};
 use glam::{vec4, Vec4};
 use rand::rng;
@@ -16,10 +17,19 @@ pub struct Scene {
 }
 
 impl Scene {
-    pub fn new(camera: Camera, world: World) -> Self {
+    pub fn new(camera: Camera, world: World, tracer_type: crate::TracerTypeArg) -> Self {
+        let tracer = match tracer_type {
+            crate::TracerTypeArg::Naive => {
+                tracer::TracerType::NaiveTracer(NaiveTracer::new(&world.geometry))
+            }
+            crate::TracerTypeArg::Embree => {
+                tracer::TracerType::EmbreeTracer(EmbreeRayTracer::new(&world.geometry))
+            }
+        };
+
         Self {
             camera,
-            tracer: tracer::TracerType::EmbreeTracer(EmbreeRayTracer::new(&world.geometry)),
+            tracer,
             world,
         }
     }
