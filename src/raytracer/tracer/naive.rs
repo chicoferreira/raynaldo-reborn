@@ -12,16 +12,18 @@ impl NaiveTracer {
     pub fn new(objects: &[GeometryType]) -> Self {
         let objects = objects
             .into_iter()
-            .map(|o| match o {
-                GeometryType::Sphere { center, radius } => NaiveObject::NaiveSphere {
+            .flat_map(|o| match o {
+                GeometryType::Sphere { center, radius } => Some(NaiveObject::NaiveSphere {
                     center: *center,
                     radius: *radius,
-                },
+                }),
                 GeometryType::Quad {
                     origin: point,
                     u,
                     v,
-                } => NaiveObject::NaiveQuad(NaiveQuad::new(*point, *u, *v)),
+                } => Some(NaiveObject::NaiveQuad(NaiveQuad::new(*point, *u, *v))),
+                // TODO: Implement triangle mesh intersection
+                GeometryType::TriangleMesh(_) => None,
             })
             .collect();
         Self { objects }

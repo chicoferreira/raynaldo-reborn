@@ -26,12 +26,12 @@ struct RenderState {
     /// The current pixel being rendered.
     current_render_pixel: usize,
     /// The canvas that holds the accumulated values: (r_sum, g_sum, b_sum, sample_count)
-    canvas: Vec<(f32, f32, f32, u8)>,
+    canvas: Vec<(f32, f32, f32, u32)>,
     /// The total number of samples that have been rendered.
     /// This needs to be equal to height * width * samples_per_pixel to be considered finished.
     total_rendered_pixel_samples: usize,
     /// The number of samples per pixel that have been rendered.
-    rendered_samples: u8,
+    rendered_samples: u32,
 }
 
 impl RenderState {
@@ -244,7 +244,7 @@ pub(crate) fn run(world: World, camera_settings: CameraSettings) {
                 && instant.elapsed() < Duration::from_millis(state.time_budget_ms)
             {
                 #[derive(Copy, Clone)]
-                struct BufferWrapper(*mut (f32, f32, f32, u8));
+                struct BufferWrapper(*mut (f32, f32, f32, u32));
 
                 // SAFETY: this is safe because no simultaneous access to the same index happens
                 unsafe impl Send for BufferWrapper {}

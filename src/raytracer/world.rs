@@ -1,5 +1,5 @@
 use crate::raytracer::material::MaterialType;
-use glam::Vec3;
+use glam::{Vec2, Vec3};
 
 pub struct Ray {
     pub origin: Vec3,
@@ -31,4 +31,12 @@ pub struct Geometry {
 pub enum GeometryType {
     Sphere { center: Vec3, radius: f32 },
     Quad { origin: Vec3, u: Vec3, v: Vec3 },
+    TriangleMesh(TriangleMeshGeometry),
+}
+
+#[derive(Clone)]
+pub struct TriangleMeshGeometry {
+    pub verts: Vec<(f32, f32, f32)>,
+    pub indices: Vec<(u32, u32, u32)>,
+    pub tex_coords: Vec<Vec2>,
 }

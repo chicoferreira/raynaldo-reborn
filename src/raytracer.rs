@@ -4,10 +4,10 @@ pub mod tracer;
 pub mod world;
 
 use crate::raytracer::camera::Camera;
+use crate::raytracer::tracer::embree::EmbreeRayTracer;
 use crate::raytracer::world::{Ray, World};
-use glam::{Vec4, vec4};
+use glam::{vec4, Vec4};
 use rand::rng;
-use tracer::naive::NaiveTracer;
 
 pub struct Scene {
     pub camera: Camera,
@@ -17,15 +17,9 @@ pub struct Scene {
 
 impl Scene {
     pub fn new(camera: Camera, world: World) -> Self {
-        let geometry_types: Vec<_> = world
-            .geometry
-            .iter()
-            .map(|g| g.geometry_type.clone())
-            .collect();
-
         Self {
             camera,
-            tracer: tracer::TracerType::NaiveTracer(NaiveTracer::new(&geometry_types)),
+            tracer: tracer::TracerType::EmbreeTracer(EmbreeRayTracer::new(&world.geometry)),
             world,
         }
     }
