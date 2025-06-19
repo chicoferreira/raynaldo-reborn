@@ -1,0 +1,25 @@
+[camera]
+position = [-1.0, 0.0, 0.0]
+yaw = 0.0
+pitch = 0.0
+fov = 60.0
+focus_distance = 10.0
+defocus_angle = 0.0
+
+[world]
+[[geometry]]
+type = "triangle_mesh"
+mesh_type = "obj_file"
+path = "assets/dragon80k.obj"
+material = "metal"
+albedo = [0.9, 0.8, 0.6, 1.0]
+fuzziness = 0.1
+
+[[geometry]]
+type = "quad"
+origin = [-100.0, -0.3, -100.0]
+u = [200.0, 0.0, 0.0]
+v = [0.0, 0.0, 200.0]
+material = "lambertian"
+texture = "solid"
+color = [0.5, 0.5, 0.5, 1.0]

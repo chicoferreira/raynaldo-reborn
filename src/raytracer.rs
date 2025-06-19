@@ -1,4 +1,5 @@
 pub mod camera;
+pub mod loader;
 pub mod material;
 pub mod tracer;
 pub mod world;
@@ -7,7 +8,7 @@ use crate::raytracer::camera::Camera;
 use crate::raytracer::tracer::embree::EmbreeRayTracer;
 use crate::raytracer::tracer::naive::NaiveTracer;
 use crate::raytracer::world::{Ray, World};
-use glam::{vec4, Vec4};
+use glam::{Vec4, vec4};
 use rand::rng;
 
 pub struct Scene {
@@ -40,6 +41,7 @@ impl Scene {
         self.camera.update_pixel_constants();
     }
 
+    #[allow(dead_code)]
     pub fn render_pixel(&self, x: u32, y: u32, samples_per_pixel: u32, max_depth: u32) -> Vec4 {
         let mut color = Vec4::ZERO;
         for _ in 0..samples_per_pixel {

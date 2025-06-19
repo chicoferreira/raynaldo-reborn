@@ -1,7 +1,7 @@
 use crate::app::gui_framework::EguiFramework;
 use crate::app::renderer::Renderer;
 use crate::raytracer::Scene;
-use crate::raytracer::camera::Camera;
+use crate::raytracer::loader::CameraSettings;
 use crate::raytracer::world::World;
 use pollster::FutureExt;
 use rand::prelude::SliceRandom;
@@ -141,7 +141,11 @@ struct AppState {
     egui_framework: EguiFramework,
 }
 
-pub(crate) fn run(world: World, camera_settings: CameraSettings, tracer_type: crate::TracerTypeArg) {
+pub(crate) fn run(
+    world: World,
+    camera_settings: CameraSettings,
+    tracer_type: crate::TracerTypeArg,
+) {
     let app = winit_app::WinitApp::new(
         |event_loop| {
             event_loop
@@ -311,30 +315,4 @@ pub(crate) fn run(world: World, camera_settings: CameraSettings, tracer_type: cr
     );
 
     app.run().unwrap()
-}
-
-#[derive(Clone)]
-pub struct CameraSettings {
-    pub position: glam::Vec3,
-    pub yaw: f32,
-    pub pitch: f32,
-    pub fov: f32,
-    pub focus_distance: f32,
-    pub defocus_angle: f32,
-}
-
-impl CameraSettings {
-    fn to_camera(&self, width: u32, height: u32, sensibility: f32) -> Camera {
-        Camera::new(
-            width,
-            height,
-            self.fov,
-            self.position,
-            self.yaw,
-            self.pitch,
-            sensibility,
-            self.focus_distance,
-            self.defocus_angle,
-        )
-    }
 }

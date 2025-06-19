@@ -16,7 +16,12 @@ wgpu = "24.0.1"
 winit = "0.30.9"
 # FIXME: use original winit_input_helper repository once merged
 winit_input_helper = { git = "https://github.com/mrfoogles/winit_input_helper", branch = "main" }
-glam = { version = "0.30.1", features = ["rand"] }
+glam = { version = "0.30.1", features = ["rand", "serde"] }
 image = "0.25.6"
 clap = { version = "4.5", features = ["derive"] }
+serde = { version = "1.0.219", features = ["derive"] }
+toml = "0.8.23"
+tobj = "4.0.3"
+anyhow = "1.0.98"
+serde_json = "1.0.140"
 

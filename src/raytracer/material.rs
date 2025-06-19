@@ -2,17 +2,27 @@ use crate::raytracer::material::texture::Texture;
 use crate::raytracer::tracer::TraceResult;
 use crate::raytracer::world::Ray;
 use glam::{Vec3, Vec4};
+use serde::{Deserialize, Serialize};
 
 pub struct ScatterResult {
     pub attenuation: Vec4,
     pub scattered: Ray,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "material")]
 pub enum MaterialType {
-    Lambertian { texture: Texture },
-    Metal { albedo: Vec4, fuzziness: f32 },
-    Dielectric { refractive_index: f32 },
+    Lambertian {
+        #[serde(flatten)]
+        texture: Texture,
+    },
+    Metal {
+        albedo: Vec4,
+        fuzziness: f32,
+    },
+    Dielectric {
+        refractive_index: f32,
+    },
 }
 
 impl MaterialType {
@@ -94,8 +104,10 @@ fn random_unit_vector() -> Vec3 {
 pub mod texture {
     use glam::Vec4;
     use image::Rgba32FImage;
+    use serde::{Deserialize, Serialize};
 
-    #[derive(Clone)]
+    #[derive(Clone, Serialize, Deserialize)]
+    #[serde(rename_all = "snake_case", tag = "texture")]
     pub enum Texture {
         Solid {
             color: Vec4,
@@ -106,6 +118,10 @@ pub mod texture {
             scale: f32,
         },
         Image {
+            #[serde(
+                deserialize_with = "crate::raytracer::loader::deserialize_image",
+                serialize_with = "crate::raytracer::loader::serialize_image"
+            )]
             image: Rgba32FImage,
         },
     }
