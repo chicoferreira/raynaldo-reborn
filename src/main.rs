@@ -10,12 +10,12 @@ mod raytracer;
 #[command(about = "A ray tracer with multiple backend options")]
 struct Args {
     /// Tracer type to use for ray tracing
-    #[arg(short, long, value_enum, default_value_t = TracerTypeArg::Embree)]
-    tracer: TracerTypeArg,
+    #[arg(short, long, value_enum, default_value_t = TracerType::Embree)]
+    tracer: TracerType,
 }
 
 #[derive(clap::ValueEnum, Clone, Copy, Debug)]
-enum TracerTypeArg {
+enum TracerType {
     /// Use the naive ray tracer implementation
     Naive,
     /// Use the Embree ray tracer implementation

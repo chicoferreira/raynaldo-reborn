@@ -142,7 +142,7 @@ pub mod texture {
                 }
                 Texture::Image { image } => {
                     let pixel = image::imageops::sample_bilinear(image, u, 1.0 - v)
-                        .expect("UV is inbounds");
+                        .unwrap_or([0.0, 0.0, 0.0, 0.0].into());
                     Vec4::new(pixel[0], pixel[1], pixel[2], pixel[3])
                 }
             }

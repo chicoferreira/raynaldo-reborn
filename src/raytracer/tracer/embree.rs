@@ -6,12 +6,12 @@ use glam::Vec3;
 use std::collections::Bound;
 use std::ops::RangeBounds;
 
-pub struct EmbreeRayTracer {
+pub struct EmbreeTracer {
     committed_scene: embree4_rs::CommittedScene<'static>,
 }
 
-impl EmbreeRayTracer {
-    pub fn new(geometry: &[Geometry]) -> EmbreeRayTracer {
+impl EmbreeTracer {
+    pub fn new(geometry: &[Geometry]) -> EmbreeTracer {
         let device = embree4_rs::Device::try_new(None).expect("Failed to create Embree device");
         let device = Box::leak(Box::new(device));
 
@@ -72,7 +72,7 @@ impl EmbreeRayTracer {
 
         let committed_scene = scene.commit().expect("Failed to commit scene");
 
-        EmbreeRayTracer { committed_scene }
+        EmbreeTracer { committed_scene }
     }
 
     pub fn trace(&self, ray: &Ray, ray_bounds: &impl RangeBounds<f32>) -> Option<TraceResult> {
@@ -124,14 +124,14 @@ impl From<RTCRayHit> for TraceResult {
         let origin = Vec3::new(value.ray.org_x, value.ray.org_y, value.ray.org_z);
         let dir = Vec3::new(value.ray.dir_x, value.ray.dir_y, value.ray.dir_z).normalize();
         let point = origin + dir * value.ray.tfar;
-        
+
         let mut normal = Vec3::new(value.hit.Ng_x, value.hit.Ng_y, value.hit.Ng_z).normalize();
-        
+
         let front_face = dir.dot(normal) < 0.0;
         if !front_face {
             normal = -normal;
         }
-        
+
         TraceResult {
             distance: value.ray.tfar,
             normal,

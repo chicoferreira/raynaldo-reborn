@@ -1,5 +1,5 @@
 use crate::raytracer::material::MaterialType;
-use glam::{Vec2, Vec3};
+use glam::Vec3;
 use serde::{Deserialize, Serialize};
 
 pub struct Ray {
@@ -54,5 +54,5 @@ pub struct TriangleMeshGeometry {
     pub verts: Vec<(f32, f32, f32)>,
     pub indices: Vec<(u32, u32, u32)>,
     // TODO: Add texture coordinates to uv mapping
-    pub tex_coords: Vec<Vec2>,
+    // pub tex_coords: Vec<Vec2>,
 }

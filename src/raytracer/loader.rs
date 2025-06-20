@@ -78,7 +78,6 @@ pub enum TriangleMeshGeometrySettings {
     Implicit {
         verts: Vec<(f32, f32, f32)>,
         indices: Vec<(u32, u32, u32)>,
-        tex_coords: Vec<(f32, f32)>,
     },
 }
 
@@ -104,23 +103,11 @@ impl TryInto<TriangleMeshGeometry> for TriangleMeshGeometrySettings {
                         .chunks_exact(3)
                         .map(|chunk| (chunk[0], chunk[1], chunk[2]))
                         .collect(),
-                    tex_coords: model
-                        .mesh
-                        .texcoords
-                        .chunks_exact(2)
-                        .map(|chunk| glam::vec2(chunk[0], chunk[1]))
-                        .collect(),
                 }
             }
-            TriangleMeshGeometrySettings::Implicit {
-                verts,
-                indices,
-                tex_coords,
-            } => TriangleMeshGeometry {
-                verts,
-                indices,
-                tex_coords: tex_coords.into_iter().map(Into::into).collect(),
-            },
+            TriangleMeshGeometrySettings::Implicit { verts, indices } => {
+                TriangleMeshGeometry { verts, indices }
+            }
         })
     }
 }

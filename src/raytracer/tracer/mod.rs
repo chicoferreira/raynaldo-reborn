@@ -1,6 +1,7 @@
 pub mod embree;
 pub mod naive;
 
+use crate::raytracer::tracer::embree::EmbreeTracer;
 use crate::raytracer::tracer::naive::NaiveTracer;
 use crate::raytracer::world::Ray;
 use glam::Vec3;
@@ -15,16 +16,16 @@ pub struct TraceResult {
     pub uv: (f32, f32),
 }
 
-pub enum TracerType {
+pub enum Tracer {
     NaiveTracer(NaiveTracer),
-    EmbreeTracer(embree::EmbreeRayTracer),
+    EmbreeTracer(EmbreeTracer),
 }
 
-impl TracerType {
+impl Tracer {
     pub fn trace(&self, ray: &Ray, bounds: &impl RangeBounds<f32>) -> Option<TraceResult> {
         match self {
-            TracerType::NaiveTracer(tracer) => tracer.trace(ray, bounds),
-            TracerType::EmbreeTracer(tracer) => tracer.trace(ray, bounds),
+            Tracer::NaiveTracer(tracer) => tracer.trace(ray, bounds),
+            Tracer::EmbreeTracer(tracer) => tracer.trace(ray, bounds),
         }
     }
 }

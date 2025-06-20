@@ -144,7 +144,7 @@ struct AppState {
 pub(crate) fn run(
     world: World,
     camera_settings: CameraSettings,
-    tracer_type: crate::TracerTypeArg,
+    tracer_type: crate::TracerType,
 ) {
     let app = winit_app::WinitApp::new(
         |event_loop| {
