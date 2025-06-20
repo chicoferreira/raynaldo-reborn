@@ -39,7 +39,6 @@ impl NaiveTracer {
                     });
                 }
                 GeometryType::TriangleMesh(mesh) => {
-                    let mut objects = Vec::new();
                     for (v1, v2, v3) in mesh.indices.iter() {
                         let p1 = mesh.verts[*v1 as usize].into();
                         let p2 = mesh.verts[*v2 as usize].into();
@@ -229,26 +228,27 @@ impl NaiveObject {
     ) -> Option<TraceResult> {
         let e1 = p2 - p1;
         let e2 = p3 - p1;
-        let p = ray.direction.cross(e2);
-        let det = e1.dot(p);
-        if det.abs() < 1e-6 {
+        let h = ray.direction.cross(e2);
+        let a = e1.dot(h);
+        if a.abs() < 1e-6 {
             return None;
         }
 
-        let inv_det = 1.0 / det;
-        let t = (ray.origin - p1).dot(p) * inv_det;
-        if !range.contains(&t) {
-            return None;
-        }
-
-        let q = ray.origin - p1;
-        let u = q.dot(p) * inv_det;
+        let f = 1.0 / a;
+        let s = ray.origin - p1;
+        let u = f * s.dot(h);
         if u < 0.0 || u > 1.0 {
             return None;
         }
 
-        let v = ray.direction.dot(q) * inv_det;
+        let q = s.cross(e1);
+        let v = f * ray.direction.dot(q);
         if v < 0.0 || u + v > 1.0 {
+            return None;
+        }
+
+        let t = f * e2.dot(q);
+        if !range.contains(&t) {
             return None;
         }
 
