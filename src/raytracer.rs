@@ -92,17 +92,22 @@ impl Scene {
 
                     if self
                         .tracer
-                        .trace(&shadow_ray, &(0.0001..light_distance - 0.0001))
+                        .trace(&shadow_ray, &(0.01..light_distance - 0.01))
                         .is_none()
                     {
-                        let cos_alpha = light_direction.dot(trace_result.normal).max(0.0);
-                        let cos_beta = -light_direction.dot(random_normal).max(0.0);
+                        let diffuse = material
+                            .scatter(&ray, &trace_result)
+                            .map_or(Vec4::ZERO, |s| s.attenuation);
+
+                        let cos_alpha = light_direction.dot(trace_result.normal);
+                        let cos_beta = -light_direction.dot(random_normal);
 
                         // pdf_select_light = (intensity * area) / sum(intensity*area)
                         // pdf_point_on_light = pdf_select_light * (1.0 / area)
                         let pdf = light.pdf * (1.0 / light.light_area);
 
-                        let light_contribution = cos_alpha * cos_beta / (pdf * light_distance.powi(2));
+                        let light_contribution =
+                            diffuse * cos_alpha * cos_beta / (pdf * light_distance.powi(2));
 
                         final_color += throughput * light_contribution;
                     }
