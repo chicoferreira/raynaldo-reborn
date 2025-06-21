@@ -30,9 +30,15 @@ pub enum MaterialType {
 }
 
 impl MaterialType {
-    pub fn emit(&self) -> Vec4 {
+    pub fn emit(&self, trace_result: &TraceResult) -> Vec4 {
         match self {
-            MaterialType::Emissive { color, intensity } => *color * *intensity,
+            MaterialType::Emissive { color, intensity } => {
+                if trace_result.front_face {
+                    Vec4::ZERO
+                } else {
+                    *color * *intensity
+                }
+            }
             _ => Vec4::ZERO,
         }
     }
@@ -40,15 +46,11 @@ impl MaterialType {
     pub fn scatter(&self, ray: &Ray, trace_result: &TraceResult) -> Option<ScatterResult> {
         match self {
             MaterialType::Lambertian { texture } => {
-                let mut scatter_dir = trace_result.normal + random_unit_vector();
-
-                if scatter_dir.x.abs() < 1e-8 && scatter_dir.y.abs() < 1e-8 && scatter_dir.z.abs() < 1e-8 {
-                    scatter_dir = trace_result.normal;
-                }
+                let scatter_direction = cosine_weighted_hemisphere_sample(trace_result.normal);
 
                 Some(ScatterResult {
                     attenuation: texture.sample(trace_result.uv),
-                    scattered: Ray::new(trace_result.point, scatter_dir),
+                    scattered: Ray::new(trace_result.point, scatter_direction),
                 })
             }
             MaterialType::Metal { albedo, fuzziness } => {
@@ -112,6 +114,30 @@ fn random_unit_vector() -> Vec3 {
             return random_vec / length.sqrt();
         }
     }
+}
+
+fn cosine_weighted_hemisphere_sample(normal: Vec3) -> Vec3 {
+    // Generate cosine-weighted sample in local hemisphere coordinates
+    let u1: f32 = rand::random();
+    let u2: f32 = rand::random();
+
+    let cos_theta = u1.sqrt();
+    let sin_theta = (1.0 - u1).sqrt();
+    let phi = 2.0 * std::f32::consts::PI * u2;
+
+    let local_direction = Vec3::new(sin_theta * phi.cos(), sin_theta * phi.sin(), cos_theta);
+
+    // Transform from local coordinates to world coordinates
+    let up = if normal.z.abs() > 0.9 {
+        Vec3::X
+    } else {
+        Vec3::Z
+    };
+
+    let tangent = up.cross(normal).normalize();
+    let bitangent = normal.cross(tangent);
+
+    local_direction.x * tangent + local_direction.y * bitangent + local_direction.z * normal
 }
 
 pub mod texture {

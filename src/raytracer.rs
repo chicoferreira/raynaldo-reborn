@@ -1,10 +1,12 @@
 pub mod camera;
+pub mod light;
 pub mod loader;
 pub mod material;
 pub mod tracer;
 pub mod world;
 
 use crate::raytracer::camera::Camera;
+use crate::raytracer::light::LightSampler;
 use crate::raytracer::tracer::embree::EmbreeTracer;
 use crate::raytracer::tracer::naive::NaiveTracer;
 use crate::raytracer::world::{Ray, World};
@@ -15,6 +17,7 @@ pub struct Scene {
     pub camera: Camera,
     pub tracer: tracer::Tracer,
     pub world: World,
+    pub light_sampler: LightSampler,
 }
 
 impl Scene {
@@ -28,10 +31,13 @@ impl Scene {
             }
         };
 
+        let light_sampler = LightSampler::new(&world.geometry);
+
         Self {
             camera,
             tracer,
             world,
+            light_sampler,
         }
     }
 
@@ -61,15 +67,58 @@ impl Scene {
         let mut throughput = Vec4::ONE;
 
         for _ in 0..max_depth {
-            if let Some(result) = self.tracer.trace(&ray, &(0.0001..)) {
-                let geometry = &self.world.geometry[result.geometry_index];
+            if let Some(trace_result) = self.tracer.trace(&ray, &(0.0001..)) {
+                let geometry = &self.world.geometry[trace_result.geometry_index];
                 let material = &geometry.material;
 
-                final_color += throughput * material.emit();
+                // Add emission
+                final_color += throughput * material.emit(&trace_result);
 
-                if let Some(scatter_result) = material.scatter(&ray, &result) {
+                // Direct lighting calculation
+                if let Some(light) = self.light_sampler.sample() {
+                    let light_geometry = &self.world.geometry[light.geometry_index];
+
+                    let (random_point, random_normal) =
+                        light_geometry.geometry_type.sample_random_point();
+
+                    let light_direction = random_point - trace_result.point;
+                    let light_distance = light_direction.length();
+                    let light_direction = light_direction.normalize();
+
+                    let shadow_ray = Ray::new(
+                        trace_result.point + light_direction * 0.001,
+                        light_direction,
+                    );
+
+                    if self
+                        .tracer
+                        .trace(&shadow_ray, &(0.0001..light_distance - 0.0001))
+                        .is_none()
+                    {
+                        let cos_alpha = light_direction.dot(trace_result.normal);
+                        let cos_beta = -light_direction.dot(random_normal);
+
+                        // The formula is missing AREA * LUMINANCE but it would be divided by it (as it is equal to the pdf) so it cancels out.
+                        let light_contribution = cos_alpha * cos_beta / light_distance.powi(2);
+
+                        final_color += throughput * light_contribution;
+                    }
+                }
+
+                // Indirect lighting (material scattering)
+                if let Some(scatter_result) = material.scatter(&ray, &trace_result) {
                     ray = scatter_result.scattered;
                     throughput *= scatter_result.attenuation;
+
+                    // Russian roulette for path termination
+                    let max_component = throughput.x.max(throughput.y).max(throughput.z);
+                    if max_component < 0.1 {
+                        let survival_probability = max_component;
+                        if rand::random::<f32>() > survival_probability {
+                            break;
+                        }
+                        throughput /= survival_probability;
+                    }
                 } else {
                     break;
                 }

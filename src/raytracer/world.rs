@@ -55,6 +55,57 @@ pub enum GeometryType {
     },
 }
 
+impl GeometryType {
+    /// Samples a random point on the geometry.
+    /// Returns (point, normal_at_that_point)
+    pub fn sample_random_point(&self) -> (Vec3, Vec3) {
+        match self {
+            GeometryType::Sphere { center, radius } => {
+                let theta = rand::random::<f32>() * 2.0 * std::f32::consts::PI;
+                let phi = rand::random::<f32>() * std::f32::consts::PI;
+                let normal = Vec3::new(
+                    theta.sin() * phi.cos(),
+                    theta.sin() * phi.sin(),
+                    theta.cos(),
+                );
+                let point = center + radius * normal;
+                (point, normal)
+            }
+            GeometryType::Quad { origin, u, v } => {
+                let point = origin + u * rand::random::<f32>() + v * rand::random::<f32>();
+                let normal = u.cross(*v).normalize();
+                (point, normal)
+            }
+            GeometryType::TriangleMesh(mesh) => {
+                // NOT THE CORRECT WAY TO SAMPLE A TRIANGLE MESH WHEN TRIANGLES ARE NOT UNIFORM
+                let index = rand::random_range(0..mesh.indices.len());
+                let (i0, i1, i2) = mesh.indices[index];
+                let v0 = Vec3::from(mesh.verts[i0 as usize]);
+                let v1 = Vec3::from(mesh.verts[i1 as usize]);
+                let v2 = Vec3::from(mesh.verts[i2 as usize]);
+
+                let u = rand::random::<f32>();
+                let v = rand::random::<f32>();
+                let point = v0 * u + v1 * v + v2 * (1.0 - u - v);
+                let normal = (v1 - v0).cross(v2 - v0).normalize();
+                (point, normal)
+            }
+            GeometryType::Box { origin, u, v, w } => {
+                // NOT THE CORRECT WAY TO SAMPLE A BOX WHEN FACES ARE NOT UNIFORM
+                let (s1, s2) = (rand::random::<f32>(), rand::random::<f32>());
+                match rand::random_range(0..6) {
+                    0 => (origin + u * s1 + v * s2, u.cross(*v).normalize()),
+                    1 => (origin + u * s1 + w * s2, u.cross(*w).normalize()),
+                    2 => (origin + v * s1 + w * s2, v.cross(*w).normalize()),
+                    3 => (origin + u * s1 - v * s2, u.cross(-*v).normalize()),
+                    4 => (origin + v * s1 - w * s2, v.cross(-*w).normalize()),
+                    _ => (origin + w * s1 - v * s2, w.cross(-*v).normalize()),
+                }
+            }
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct TriangleMeshGeometry {
     pub verts: Vec<(f32, f32, f32)>,

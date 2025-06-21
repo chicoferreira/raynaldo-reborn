@@ -141,11 +141,7 @@ struct AppState {
     egui_framework: EguiFramework,
 }
 
-pub(crate) fn run(
-    world: World,
-    camera_settings: CameraSettings,
-    tracer_type: crate::TracerType,
-) {
+pub(crate) fn run(world: World, camera_settings: CameraSettings, tracer_type: crate::TracerType) {
     let app = winit_app::WinitApp::new(
         |event_loop| {
             event_loop
