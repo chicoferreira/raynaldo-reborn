@@ -32,7 +32,7 @@ fn main() {
         world: World,
     }
 
-    let world = std::fs::read_to_string("assets/worlds/dragon80k.toml").unwrap();
+    let world = std::fs::read_to_string("assets/worlds/cornell_box.toml").unwrap();
     let world: WorldConfig = toml::from_str(&world).unwrap();
 
     app::run(world.world, world.camera, args.tracer);

@@ -23,9 +23,20 @@ pub enum MaterialType {
     Dielectric {
         refractive_index: f32,
     },
+    Emissive {
+        color: Vec4,
+        intensity: f32,
+    },
 }
 
 impl MaterialType {
+    pub fn emit(&self) -> Vec4 {
+        match self {
+            MaterialType::Emissive { color, intensity } => *color * *intensity,
+            _ => Vec4::ZERO,
+        }
+    }
+
     pub fn scatter(&self, ray: &Ray, trace_result: &TraceResult) -> Option<ScatterResult> {
         match self {
             MaterialType::Lambertian { texture } => {
@@ -81,6 +92,7 @@ impl MaterialType {
                     scattered: Ray::new(trace_result.point, direction),
                 })
             }
+            MaterialType::Emissive { .. } => None,
         }
     }
 }
@@ -94,8 +106,9 @@ fn reflectance(cosine: f32, refractive_index: f32) -> f32 {
 fn random_unit_vector() -> Vec3 {
     loop {
         let random_vec: Vec3 = rand::random();
+        let random_vec = random_vec * 2.0 - Vec3::ONE;
         let length = random_vec.length_squared();
-        if length <= 1.0 && length > 0.1 {
+        if length <= 1.0 && length > 1e-8 {
             return random_vec / length.sqrt();
         }
     }
