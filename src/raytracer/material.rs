@@ -42,7 +42,7 @@ impl MaterialType {
             MaterialType::Lambertian { texture } => {
                 let mut scatter_dir = trace_result.normal + random_unit_vector();
 
-                if scatter_dir.x < 1e-8 && scatter_dir.y < 1e-8 && scatter_dir.z < 1e-8 {
+                if scatter_dir.x.abs() < 1e-8 && scatter_dir.y.abs() < 1e-8 && scatter_dir.z.abs() < 1e-8 {
                     scatter_dir = trace_result.normal;
                 }
 
