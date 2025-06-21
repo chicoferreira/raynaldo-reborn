@@ -67,6 +67,46 @@ impl EmbreeTracer {
                         .attach_geometry(&embree_geom)
                         .expect("Failed to attach triangle mesh geometry");
                 }
+                GeometryType::Box { origin, u, v, w } => {
+                    // Convert oriented box to triangle mesh
+                    // Define 8 vertices of the oriented box
+                    let vertices = [
+                        (*origin).into(),                // 0: origin
+                        (*origin + *u).into(),           // 1: origin + u
+                        (*origin + *u + *v).into(),      // 2: origin + u + v
+                        (*origin + *v).into(),           // 3: origin + v
+                        (*origin + *w).into(),           // 4: origin + w
+                        (*origin + *u + *w).into(),      // 5: origin + u + w
+                        (*origin + *u + *v + *w).into(), // 6: origin + u + v + w
+                        (*origin + *v + *w).into(),      // 7: origin + v + w
+                    ];
+
+                    // Define 12 triangles (2 per face, 6 faces)
+                    #[rustfmt::skip]
+                    let indices = [
+                        // Bottom face (no w component) - normal pointing down (-v direction)
+                        (0, 1, 2), (0, 2, 3),
+                        // Top face (w component) - normal pointing up (+v direction)
+                        (4, 7, 6), (4, 6, 5),
+                        // Left face (no u component) - normal pointing left (-u direction)
+                        (0, 3, 7), (0, 7, 4),
+                        // Right face (u component) - normal pointing right (+u direction)
+                        (1, 5, 6), (1, 6, 2),
+                        // Front face (no v component) - normal pointing down (-v direction)
+                        (0, 4, 5), (0, 5, 1),
+                        // Back face (v component) - normal pointing up (+v direction)
+                        (3, 2, 6), (3, 6, 7),
+                    ];
+
+                    let embree_geom = embree4_rs::geometry::TriangleMeshGeometry::try_new(
+                        device, &vertices, &indices,
+                    )
+                    .expect("Failed to create box geometry");
+
+                    scene
+                        .attach_geometry(&embree_geom)
+                        .expect("Failed to attach box geometry");
+                }
             }
         }
 

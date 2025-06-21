@@ -47,6 +47,12 @@ pub enum GeometryType {
         serialize_with = "crate::raytracer::loader::serialize_triangle_mesh"
     )]
     TriangleMesh(TriangleMeshGeometry),
+    Box {
+        origin: Vec3,
+        u: Vec3,
+        v: Vec3,
+        w: Vec3,
+    },
 }
 
 #[derive(Clone)]
