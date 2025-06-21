@@ -1,18 +1,21 @@
 use crate::raytracer::{material::MaterialType, world::Geometry};
 
 pub struct LightSampler {
-    lights: Vec<LightCdf>,
+    lights: Vec<LightSample>,
 }
 
 #[derive(Clone, Copy)]
-pub struct LightCdf {
+pub struct LightSample {
     pub geometry_index: usize,
+    pub pdf: f32,
+    pub light_area: f32,
     cdf: f32,
 }
 
 impl LightSampler {
     pub fn new(world: &[Geometry]) -> Self {
         let mut lights = Vec::new();
+        let mut sum = 0.0;
 
         for (index, geometry) in world.iter().enumerate() {
             let material = &geometry.material;
@@ -37,16 +40,19 @@ impl LightSampler {
 
             let pdf = intensity * area;
 
-            lights.push(LightCdf {
+            sum += pdf;
+
+            lights.push(LightSample {
                 geometry_index: index,
-                // Keep PDF for now, will be converted to CDF later
+                light_area: area,
+                pdf,
                 cdf: pdf,
             });
         }
 
         // Normalize PDFs
-        let sum = lights.iter().map(|light| light.cdf).sum::<f32>();
         for light in &mut lights {
+            light.pdf /= sum;
             light.cdf /= sum;
         }
 
@@ -55,10 +61,15 @@ impl LightSampler {
             lights[i].cdf += lights[i - 1].cdf;
         }
 
+        // Ensure the last CDF is exactly 1.0
+        if let Some(last_light) = lights.last_mut() {
+            last_light.cdf = 1.0;
+        }
+
         LightSampler { lights }
     }
 
-    pub fn sample(&self) -> Option<LightCdf> {
+    pub fn sample(&self) -> Option<LightSample> {
         if self.lights.is_empty() {
             return None;
         }

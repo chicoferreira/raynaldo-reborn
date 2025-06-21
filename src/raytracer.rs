@@ -95,11 +95,14 @@ impl Scene {
                         .trace(&shadow_ray, &(0.0001..light_distance - 0.0001))
                         .is_none()
                     {
-                        let cos_alpha = light_direction.dot(trace_result.normal);
-                        let cos_beta = -light_direction.dot(random_normal);
+                        let cos_alpha = light_direction.dot(trace_result.normal).max(0.0);
+                        let cos_beta = -light_direction.dot(random_normal).max(0.0);
 
-                        // The formula is missing AREA * LUMINANCE but it would be divided by it (as it is equal to the pdf) so it cancels out.
-                        let light_contribution = cos_alpha * cos_beta / light_distance.powi(2);
+                        // pdf_select_light = (intensity * area) / sum(intensity*area)
+                        // pdf_point_on_light = pdf_select_light * (1.0 / area)
+                        let pdf = light.pdf * (1.0 / light.light_area);
+
+                        let light_contribution = cos_alpha * cos_beta / (pdf * light_distance.powi(2));
 
                         final_color += throughput * light_contribution;
                     }
