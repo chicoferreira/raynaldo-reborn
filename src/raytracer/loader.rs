@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
+use glam::Vec2;
 
 use crate::raytracer::{camera::Camera, world::TriangleMeshGeometry};
 
@@ -90,6 +91,19 @@ impl TryInto<TriangleMeshGeometry> for TriangleMeshGeometrySettings {
                 let (models, _materials) = tobj::load_obj(path, &tobj::LoadOptions::default())?;
                 let model = models.get(0).expect("obj has no models");
 
+                // Extract texture coordinates if available
+                let tex_coords = if model.mesh.texcoords.is_empty() {
+                    // Generate default UV coordinates if none are provided
+                    vec![Vec2::ZERO; model.mesh.positions.len() / 3]
+                } else {
+                    model
+                        .mesh
+                        .texcoords
+                        .chunks_exact(2)
+                        .map(|chunk| Vec2::new(chunk[0], chunk[1]))
+                        .collect()
+                };
+
                 TriangleMeshGeometry {
                     verts: model
                         .mesh
@@ -103,10 +117,16 @@ impl TryInto<TriangleMeshGeometry> for TriangleMeshGeometrySettings {
                         .chunks_exact(3)
                         .map(|chunk| (chunk[0], chunk[1], chunk[2]))
                         .collect(),
+                    tex_coords,
                 }
             }
             TriangleMeshGeometrySettings::Implicit { verts, indices } => {
-                TriangleMeshGeometry { verts, indices }
+                let num_verts = verts.len();
+                TriangleMeshGeometry { 
+                    verts, 
+                    indices,
+                    tex_coords: vec![Vec2::ZERO; num_verts],
+                }
             }
         })
     }

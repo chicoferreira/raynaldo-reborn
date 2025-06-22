@@ -164,18 +164,7 @@ impl EmbreeTracer {
         let geometry_index = hit.hit.geomID as usize;
 
         let uv = if geometry_index < self.geometry.len() {
-            match &self.geometry[geometry_index].geometry_type {
-                // UV from spheres are broken in embree, so we calculate them manually
-                GeometryType::Sphere { center, .. } => {
-                    let sphere_point = (point - center).normalize();
-                    let theta = (-sphere_point.y).acos();
-                    let phi = (-sphere_point.z).atan2(sphere_point.x) + PI;
-                    let u = phi / (2.0 * PI);
-                    let v = theta / PI;
-                    (u, v)
-                }
-                _ => (hit.hit.u, hit.hit.v),
-            }
+            self.calculate_uv(&self.geometry[geometry_index].geometry_type, point, &hit)
         } else {
             (hit.hit.u, hit.hit.v)
         };
@@ -187,6 +176,88 @@ impl EmbreeTracer {
             geometry_index,
             point,
             uv,
+        }
+    }
+
+    fn calculate_uv(&self, geometry: &GeometryType, point: Vec3, hit: &RTCRayHit) -> (f32, f32) {
+        match geometry {
+            // UV from spheres are broken in embree, so we calculate them manually
+            GeometryType::Sphere { center, .. } => {
+                let sphere_point = (point - center).normalize();
+                let theta = (-sphere_point.y).acos();
+                let phi = (-sphere_point.z).atan2(sphere_point.x) + PI;
+                let u = phi / (2.0 * PI);
+                let v = theta / PI;
+                (u, v)
+            }
+            // For quads, calculate UV based on position within the quad
+            GeometryType::Quad { origin, u, v } => {
+                let vector_in_plane = point - origin;
+                let u_coord = vector_in_plane.dot(*u) / u.length_squared();
+                let v_coord = vector_in_plane.dot(*v) / v.length_squared();
+                (u_coord, v_coord)
+            }
+            // For triangle meshes, interpolate texture coordinates using barycentric coordinates
+            GeometryType::TriangleMesh(mesh) => {
+                let prim_id = hit.hit.primID as usize;
+                if prim_id < mesh.indices.len() && !mesh.tex_coords.is_empty() {
+                    let (i0, i1, i2) = mesh.indices[prim_id];
+                    let uv0 = mesh.tex_coords[i0 as usize];
+                    let uv1 = mesh.tex_coords[i1 as usize];
+                    let uv2 = mesh.tex_coords[i2 as usize];
+                    
+                    // Interpolate using barycentric coordinates
+                    // hit.hit.u and hit.hit.v are barycentric coordinates for the triangle
+                    let w = 1.0 - hit.hit.u - hit.hit.v; // barycentric coordinate for vertex 0
+                    let interpolated_uv = w * uv0 + hit.hit.u * uv1 + hit.hit.v * uv2;
+                    (interpolated_uv.x, interpolated_uv.y)
+                } else {
+                    // Fallback to barycentric coordinates if no texture coordinates available
+                    (hit.hit.u, hit.hit.v)
+                }
+            }
+            // For boxes, calculate UV based on which face was hit and local coordinates
+            GeometryType::Box { origin, u, v, w } => {
+                // Transform hit point to local box coordinates
+                let ray_hit_local = point - origin;
+                
+                // Calculate the inverse transformation matrix for the box
+                let det = u.dot(v.cross(*w));
+                if det.abs() < 1e-8 {
+                    return (0.0, 0.0); // Degenerate box
+                }
+                
+                let inv_det = 1.0 / det;
+                let local_hit = Vec3::new(
+                    ray_hit_local.dot(v.cross(*w)) * inv_det,
+                    ray_hit_local.dot(w.cross(*u)) * inv_det,
+                    ray_hit_local.dot(u.cross(*v)) * inv_det,
+                );
+                
+                // Determine which face we hit by finding the coordinate closest to 0 or 1
+                let distances_to_faces = [
+                    local_hit.x.abs(),           // Left face (x = 0)
+                    (local_hit.x - 1.0).abs(),   // Right face (x = 1)
+                    local_hit.y.abs(),           // Bottom face (y = 0)
+                    (local_hit.y - 1.0).abs(),   // Top face (y = 1)
+                    local_hit.z.abs(),           // Front face (z = 0)
+                    (local_hit.z - 1.0).abs(),   // Back face (z = 1)
+                ];
+                
+                let closest_face = distances_to_faces
+                    .iter()
+                    .enumerate()
+                    .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+                    .map(|(index, _)| index)
+                    .unwrap_or(0);
+                
+                // Map local coordinates to UV based on the closest face
+                match closest_face {
+                    0 | 1 => (1.0 - local_hit.z, local_hit.y), // X faces - use Z and flipped Y
+                    2 | 3 => (1.0 - local_hit.x, local_hit.z), // Y faces - use X and flipped Z
+                    _ => (1.0 - local_hit.x, local_hit.y),     // Z faces - use X and flipped Y
+                }
+            }
         }
     }
 }

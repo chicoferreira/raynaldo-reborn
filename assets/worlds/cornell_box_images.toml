@@ -26,8 +26,8 @@ origin = [3.7, 0.0, 0.0]
 u = [0.0, 0.0, 3.7]
 v = [0.0, 3.7, 0.0]
 material = "lambertian"
-texture = "solid"
-color = [0.12, 0.45, 0.15, 1.0]
+texture = "image"
+image = "assets/img.png"
 
 # Left wall (red)
 [[geometry]]
@@ -36,8 +36,8 @@ origin = [0.0, 0.0, 3.7]
 u = [0.0, 0.0, -3.7]
 v = [0.0, 3.7, 0.0]
 material = "lambertian"
-texture = "solid"
-color = [0.65, 0.05, 0.05, 1.0]
+texture = "image"
+image = "assets/img.png"
 
 # Floor (white)
 [[geometry]]
@@ -46,8 +46,8 @@ origin = [0.0, 0.0, 3.7]
 u = [3.7, 0.0, 0.0]
 v = [0.0, 0.0, -3.7]
 material = "lambertian"
-texture = "solid"
-color = [0.73, 0.73, 0.73, 1.0]
+texture = "image"
+image = "assets/img.png"
 
 # Ceiling (white)
 [[geometry]]
@@ -56,8 +56,8 @@ origin = [3.7, 3.7, 3.7]
 u = [-3.7, 0.0, 0.0]
 v = [0.0, 0.0, -3.7]
 material = "lambertian"
-texture = "solid"
-color = [0.73, 0.73, 0.73, 1.0]
+texture = "image"
+image = "assets/img.png"
 
 # Back wall (white)
 [[geometry]]
@@ -66,20 +66,20 @@ origin = [3.7, 0.0, 3.7]
 u = [-3.7, 0.0, 0.0]
 v = [0.0, 3.7, 0.0]
 material = "lambertian"
-texture = "solid"
-color = [0.73, 0.73, 0.73, 1.0]
+texture = "image"
+image = "assets/img.png"
 
 # Tall box (back right) - 165x330x165 units, rotate_y 18°, translate (265,0,295)
 # Scaled to 1.1x2.2x1.1, positioned at (1.76, 0, 1.96)
 [[geometry]]
 type = "box"
 origin = [1.76, 0.0, 1.96]
-u = [1.046, 0.0, -0.340]        # 1.1 * (cos(-18°), 0, sin(-18°))
-v = [0.0, 2.2, 0.0]             # height vector
-w = [0.340, 0.0, 1.046]         # 1.1 * (-sin(-18°), 0, cos(-18°))
+u = [1.046, 0.0, -0.340]   # 1.1 * (cos(-18°), 0, sin(-18°))
+v = [0.0, 2.2, 0.0]        # height vector
+w = [0.340, 0.0, 1.046]    # 1.1 * (-sin(-18°), 0, cos(-18°))
 material = "lambertian"
-texture = "solid"
-color = [0.73, 0.73, 0.73, 1.0]
+texture = "image"
+image = "assets/img.png"
 
 # Short box (front left) - 165×165×165 units, rotate_y 18°, translate (130,0,65)
 # Scaled to 1.1×1.1×1.1, positioned at (0.87, 0, 0.43)
@@ -90,5 +90,6 @@ radius = 0.5
 u = [1.046, 0.0, 0.340]    # 1.1 * ( cos(18°), 0, sin(18°) )
 v = [0.0, 1.1, 0.0]        # height vector
 w = [-0.340, 0.0, 1.046]   # 1.1 * (-sin(18°), 0, cos(18°))
-material = "dielectric"
-refractive_index = 1.5
+material = "lambertian"
+texture = "image"
+image = "assets/img.png"

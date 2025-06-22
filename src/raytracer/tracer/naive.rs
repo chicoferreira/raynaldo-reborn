@@ -177,8 +177,9 @@ impl NaiveObject {
         let front_face = ray.direction.dot(normal) < 0.0;
         let normal = if front_face { normal } else { -normal };
 
-        let theta = (-point.y).acos();
-        let phi = (-point.z).atan2(point.x) + PI;
+        let sphere_point = (point - center).normalize();
+        let theta = (-sphere_point.y).acos();
+        let phi = (-sphere_point.z).atan2(sphere_point.x) + PI;
 
         let u = phi / (2.0 * PI);
         let v = theta / PI;
@@ -393,14 +394,11 @@ impl NaiveObject {
         };
 
         let (uv_u, uv_v) = if local_normal.x.abs() > 0.5 {
-            // X face - use Y and Z
-            (local_hit.z, local_hit.y)
+            (1.0 - local_hit.z, local_hit.y)
         } else if local_normal.y.abs() > 0.5 {
-            // Y face - use X and Z
-            (local_hit.x, local_hit.z)
+            (1.0 - local_hit.x, local_hit.z)
         } else {
-            // Z face - use X and Y
-            (local_hit.x, local_hit.y)
+            (1.0 - local_hit.x, local_hit.y)
         };
 
         Some(TraceResult {
