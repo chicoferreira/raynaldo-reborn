@@ -4,10 +4,12 @@ use embree4_rs::geometry::SphereGeometry;
 use embree4_sys::{RTCRay, RTCRayHit};
 use glam::Vec3;
 use std::collections::Bound;
+use std::f32::consts::PI;
 use std::ops::RangeBounds;
 
 pub struct EmbreeTracer {
     committed_scene: embree4_rs::CommittedScene<'static>,
+    geometry: Vec<Geometry>,
 }
 
 impl EmbreeTracer {
@@ -44,7 +46,7 @@ impl EmbreeTracer {
                         (origin + v).into(),
                     ];
 
-                    let indices = [(2, 1, 0), (0, 3, 2)];
+                    let indices = [(0, 1, 2), (2, 3, 0)];
 
                     let embree_geom = embree4_rs::geometry::TriangleMeshGeometry::try_new(
                         device, &vertices, &indices,
@@ -84,18 +86,18 @@ impl EmbreeTracer {
                     // Define 12 triangles (2 per face, 6 faces)
                     #[rustfmt::skip]
                     let indices = [
-                        // Bottom face (no w component) - normal pointing down (-v direction)
-                        (0, 1, 2), (0, 2, 3),
-                        // Top face (w component) - normal pointing up (+v direction)
-                        (4, 7, 6), (4, 6, 5),
+                        // Bottom face (no w component) - normal pointing down (-w direction)
+                        (0, 2, 1), (0, 3, 2),
+                        // Top face (w component) - normal pointing up (+w direction)
+                        (4, 5, 6), (4, 6, 7),
                         // Left face (no u component) - normal pointing left (-u direction)
-                        (0, 3, 7), (0, 7, 4),
+                        (0, 7, 3), (0, 4, 7),
                         // Right face (u component) - normal pointing right (+u direction)
-                        (1, 5, 6), (1, 6, 2),
-                        // Front face (no v component) - normal pointing down (-v direction)
-                        (0, 4, 5), (0, 5, 1),
-                        // Back face (v component) - normal pointing up (+v direction)
-                        (3, 2, 6), (3, 6, 7),
+                        (1, 2, 6), (1, 6, 5),
+                        // Front face (no v component) - normal pointing forward (-v direction)
+                        (0, 1, 5), (0, 5, 4),
+                        // Back face (v component) - normal pointing backward (+v direction)
+                        (3, 6, 2), (3, 7, 6),
                     ];
 
                     let embree_geom = embree4_rs::geometry::TriangleMeshGeometry::try_new(
@@ -112,7 +114,10 @@ impl EmbreeTracer {
 
         let committed_scene = scene.commit().expect("Failed to commit scene");
 
-        EmbreeTracer { committed_scene }
+        EmbreeTracer {
+            committed_scene,
+            geometry: geometry.to_vec(),
+        }
     }
 
     pub fn trace(&self, ray: &Ray, ray_bounds: &impl RangeBounds<f32>) -> Option<TraceResult> {
@@ -141,7 +146,48 @@ impl EmbreeTracer {
                 ..Default::default()
             })
             .expect("Device error while intersecting ray")
-            .map(Into::into)
+            .map(|hit| self.convert_hit_to_trace_result(hit))
+    }
+
+    fn convert_hit_to_trace_result(&self, hit: RTCRayHit) -> TraceResult {
+        let origin = Vec3::new(hit.ray.org_x, hit.ray.org_y, hit.ray.org_z);
+        let dir = Vec3::new(hit.ray.dir_x, hit.ray.dir_y, hit.ray.dir_z).normalize();
+        let point = origin + dir * hit.ray.tfar;
+
+        let mut normal = Vec3::new(hit.hit.Ng_x, hit.hit.Ng_y, hit.hit.Ng_z).normalize();
+
+        let front_face = dir.dot(normal) < 0.0;
+        if !front_face {
+            normal = -normal;
+        }
+
+        let geometry_index = hit.hit.geomID as usize;
+
+        let uv = if geometry_index < self.geometry.len() {
+            match &self.geometry[geometry_index].geometry_type {
+                // UV from spheres are broken in embree, so we calculate them manually
+                GeometryType::Sphere { center, .. } => {
+                    let sphere_point = (point - center).normalize();
+                    let theta = (-sphere_point.y).acos();
+                    let phi = (-sphere_point.z).atan2(sphere_point.x) + PI;
+                    let u = phi / (2.0 * PI);
+                    let v = theta / PI;
+                    (u, v)
+                }
+                _ => (hit.hit.u, hit.hit.v),
+            }
+        } else {
+            (hit.hit.u, hit.hit.v)
+        };
+
+        TraceResult {
+            distance: hit.ray.tfar,
+            normal,
+            front_face,
+            geometry_index,
+            point,
+            uv,
+        }
     }
 }
 
@@ -155,30 +201,6 @@ impl From<Ray> for RTCRay {
             dir_y: value.direction.y,
             dir_z: value.direction.z,
             ..Default::default()
-        }
-    }
-}
-
-impl From<RTCRayHit> for TraceResult {
-    fn from(value: RTCRayHit) -> Self {
-        let origin = Vec3::new(value.ray.org_x, value.ray.org_y, value.ray.org_z);
-        let dir = Vec3::new(value.ray.dir_x, value.ray.dir_y, value.ray.dir_z).normalize();
-        let point = origin + dir * value.ray.tfar;
-
-        let mut normal = Vec3::new(value.hit.Ng_x, value.hit.Ng_y, value.hit.Ng_z).normalize();
-
-        let front_face = dir.dot(normal) < 0.0;
-        if !front_face {
-            normal = -normal;
-        }
-
-        TraceResult {
-            distance: value.ray.tfar,
-            normal,
-            front_face,
-            geometry_index: value.hit.geomID as usize,
-            point,
-            uv: (value.hit.u, value.hit.v),
         }
     }
 }

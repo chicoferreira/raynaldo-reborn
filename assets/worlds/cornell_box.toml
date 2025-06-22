@@ -32,24 +32,24 @@ color = [0.12, 0.45, 0.15, 1.0]
 # Left wall (red)
 [[geometry]]
 type = "quad"
-origin = [0.0, 0.0, 0.0]
-u = [0.0, 3.7, 0.0]
-v = [0.0, 0.0, 3.7]
+origin = [0.0, 0.0, 3.7]
+u = [0.0, 0.0, -3.7]
+v = [0.0, 3.7, 0.0]
 material = "lambertian"
 texture = "solid"
 color = [0.65, 0.05, 0.05, 1.0]
 
-# Floor (white) - Fixed to point upward
+# Floor (white)
 [[geometry]]
 type = "quad"
-origin = [0.0, 0.0, 0.0]
-u = [0.0, 0.0, 3.7]
-v = [3.7, 0.0, 0.0]
+origin = [0.0, 0.0, 3.7]
+u = [3.7, 0.0, 0.0]
+v = [0.0, 0.0, -3.7]
 material = "lambertian"
 texture = "solid"
 color = [0.73, 0.73, 0.73, 1.0]
 
-# Ceiling (white) - Fixed to point downward
+# Ceiling (white) 
 [[geometry]]
 type = "quad"
 origin = [3.7, 3.7, 3.7]
@@ -62,12 +62,12 @@ color = [0.73, 0.73, 0.73, 1.0]
 # Back wall (white)
 [[geometry]]
 type = "quad"
-origin = [0.0, 0.0, 3.7]
-u = [0.0, 3.7, 0.0]
-v = [3.7, 0.0, 0.0]
+origin = [3.7, 0.0, 3.7]
+u = [-3.7, 0.0, 0.0]
+v = [0.0, 3.7, 0.0]
 material = "lambertian"
-texture = "solid"
-color = [0.73, 0.73, 0.73, 1.0]
+texture = "image"
+image = "assets/img.png"
 
 # Tall box (back right) - 165x330x165 units, rotate_y 18°, translate (265,0,295)
 # Scaled to 1.1x2.2x1.1, positioned at (1.76, 0, 1.96)

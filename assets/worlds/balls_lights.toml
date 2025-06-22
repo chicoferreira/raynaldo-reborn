@@ -7,7 +7,8 @@ focus_distance = 10.0
 defocus_angle = 0.0
 
 [environment]
-type = "sky"
+type = "color"
+color = [0.0, 0.0, 0.0]
 
 [[geometry]]
 type = "quad"
@@ -452,9 +453,9 @@ color = [0.4, 0.5, 0.2, 1.0]
 type = "sphere"
 center = [-8.8, 0.2, -0.8]
 radius = 0.2
-material = "metal"
-albedo = [0.8, 0.9, 1.0, 1.0]
-fuzziness = 0.2
+material = "emissive"
+color = [1.0, 0.5, 0.3, 1.0]
+intensity = 2.2
 
 [[geometry]]
 type = "sphere"
@@ -580,8 +581,9 @@ fuzziness = 0.3
 type = "sphere"
 center = [-7.3, 0.2, -6.1]
 radius = 0.2
-material = "dielectric"
-refractive_index = 1.5
+material = "emissive"
+color = [1.0, 0.6, 0.4, 1.0]
+intensity = 1.5
 
 [[geometry]]
 type = "sphere"
@@ -675,9 +677,9 @@ color = [0.2, 0.5, 0.4, 1.0]
 type = "sphere"
 center = [-7.7, 0.2, 5.7]
 radius = 0.2
-material = "metal"
-albedo = [0.8, 0.7, 0.8, 1.0]
-fuzziness = 0.3
+material = "emissive"
+color = [1.0, 0.7, 0.5, 1.0]
+intensity = 1.8
 
 [[geometry]]
 type = "sphere"
@@ -819,9 +821,9 @@ color = [0.7, 0.1, 0.4, 1.0]
 type = "sphere"
 center = [-6.4, 0.2, 1.8]
 radius = 0.2
-material = "metal"
-albedo = [0.6, 0.9, 0.6, 1.0]
-fuzziness = 0.3
+material = "emissive"
+color = [1.0, 0.6, 0.4, 1.0]
+intensity = 1.5
 
 [[geometry]]
 type = "sphere"
@@ -898,9 +900,9 @@ color = [0.1, 0.1, 0.2, 1.0]
 type = "sphere"
 center = [-5.9, 0.2, -10.1]
 radius = 0.2
-material = "metal"
-albedo = [0.7, 0.6, 0.9, 1.0]
-fuzziness = 0.4
+material = "emissive"
+color = [1.0, 0.8, 0.6, 1.0]
+intensity = 2.0
 
 [[geometry]]
 type = "sphere"
@@ -1225,9 +1227,9 @@ color = [0.1, 0.2, 0.7, 1.0]
 type = "sphere"
 center = [-4.7, 0.2, 8.1]
 radius = 0.2
-material = "metal"
-albedo = [0.9, 0.6, 0.5, 1.0]
-fuzziness = 0.1
+material = "emissive"
+color = [1.0, 0.7, 0.5, 1.0]
+intensity = 1.8
 
 [[geometry]]
 type = "sphere"
@@ -1281,8 +1283,9 @@ fuzziness = 0.1
 type = "sphere"
 center = [-3.6, 0.2, -6.8]
 radius = 0.2
-material = "dielectric"
-refractive_index = 1.5
+material = "emissive"
+color = [1.0, 0.5, 0.3, 1.0]
+intensity = 2.2
 
 [[geometry]]
 type = "sphere"
@@ -1368,8 +1371,9 @@ color = [0.3, 0.0, 0.5, 1.0]
 type = "sphere"
 center = [-3.5, 0.2, 4.6]
 radius = 0.2
-material = "dielectric"
-refractive_index = 1.5
+material = "emissive"
+color = [1.0, 0.6, 0.4, 1.0]
+intensity = 1.5
 
 [[geometry]]
 type = "sphere"
@@ -1431,9 +1435,9 @@ color = [0.2, 0.0, 0.3, 1.0]
 type = "sphere"
 center = [-2.2, 0.2, -9.2]
 radius = 0.2
-material = "metal"
-albedo = [1.0, 0.9, 0.5, 1.0]
-fuzziness = 0.1
+material = "emissive"
+color = [0.9, 0.9, 0.7, 1.0]
+intensity = 1.2
 
 [[geometry]]
 type = "sphere"
@@ -1463,8 +1467,9 @@ color = [0.7, 0.6, 0.3, 1.0]
 type = "sphere"
 center = [-2.8, 0.2, -5.4]
 radius = 0.2
-material = "dielectric"
-refractive_index = 1.5
+material = "emissive"
+color = [1.0, 0.8, 0.6, 1.0]
+intensity = 2.0
 
 [[geometry]]
 type = "sphere"
@@ -1637,9 +1642,9 @@ color = [0.1, 0.0, 0.0, 1.0]
 type = "sphere"
 center = [-1.2, 0.2, -5.8]
 radius = 0.2
-material = "metal"
-albedo = [0.6, 0.6, 0.7, 1.0]
-fuzziness = 0.1
+material = "emissive"
+color = [1.0, 0.7, 0.5, 1.0]
+intensity = 1.8
 
 [[geometry]]
 type = "sphere"
@@ -1844,9 +1849,9 @@ color = [0.4, 0.4, 0.8, 1.0]
 type = "sphere"
 center = [-0.4, 0.2, -1.9]
 radius = 0.2
-material = "metal"
-albedo = [0.6, 0.6, 0.8, 1.0]
-fuzziness = 0.4
+material = "emissive"
+color = [1.0, 0.5, 0.3, 1.0]
+intensity = 2.2
 
 [[geometry]]
 type = "sphere"
@@ -1868,9 +1873,9 @@ color = [0.0, 0.0, 0.1, 1.0]
 type = "sphere"
 center = [-0.2, 0.2, 1.4]
 radius = 0.2
-material = "metal"
-albedo = [0.6, 0.9, 0.8, 1.0]
-fuzziness = 0.3
+material = "emissive"
+color = [1.0, 0.6, 0.4, 1.0]
+intensity = 1.5
 
 [[geometry]]
 type = "sphere"
@@ -1924,9 +1929,9 @@ fuzziness = 0.1
 type = "sphere"
 center = [-0.2, 0.2, 8.5]
 radius = 0.2
-material = "metal"
-albedo = [1.0, 0.6, 0.6, 1.0]
-fuzziness = 0.4
+material = "emissive"
+color = [0.9, 0.9, 0.7, 1.0]
+intensity = 1.2
 
 [[geometry]]
 type = "sphere"
@@ -1964,8 +1969,9 @@ fuzziness = 0.2
 type = "sphere"
 center = [0.8, 0.2, -8.5]
 radius = 0.2
-material = "dielectric"
-refractive_index = 1.5
+material = "emissive"
+color = [1.0, 0.8, 0.6, 1.0]
+intensity = 2.0
 
 [[geometry]]
 type = "sphere"
@@ -2003,9 +2009,9 @@ color = [0.2, 0.6, 0.1, 1.0]
 type = "sphere"
 center = [0.0, 0.2, -3.8]
 radius = 0.2
-material = "metal"
-albedo = [0.9, 0.6, 1.0, 1.0]
-fuzziness = 0.3
+material = "emissive"
+color = [1.0, 0.6, 0.4, 1.0]
+intensity = 1.5
 
 [[geometry]]
 type = "sphere"
@@ -2027,9 +2033,9 @@ color = [0.2, 0.1, 0.2, 1.0]
 type = "sphere"
 center = [0.6, 0.2, -0.1]
 radius = 0.2
-material = "metal"
-albedo = [0.9, 0.6, 1.0, 1.0]
-fuzziness = 0.0
+material = "emissive"
+color = [0.9, 0.9, 0.7, 1.0]
+intensity = 1.2
 
 [[geometry]]
 type = "sphere"
@@ -2051,8 +2057,9 @@ fuzziness = 0.1
 type = "sphere"
 center = [0.5, 0.2, 2.6]
 radius = 0.2
-material = "dielectric"
-refractive_index = 1.5
+material = "emissive"
+color = [1.0, 0.8, 0.6, 1.0]
+intensity = 2.0
 
 [[geometry]]
 type = "sphere"
@@ -2098,8 +2105,9 @@ fuzziness = 0.2
 type = "sphere"
 center = [0.5, 0.2, 8.2]
 radius = 0.2
-material = "dielectric"
-refractive_index = 1.5
+material = "emissive"
+color = [1.0, 0.7, 0.5, 1.0]
+intensity = 1.8
 
 [[geometry]]
 type = "sphere"
@@ -2209,9 +2217,9 @@ color = [0.0, 0.3, 0.1, 1.0]
 type = "sphere"
 center = [1.9, 0.2, 0.2]
 radius = 0.2
-material = "metal"
-albedo = [0.6, 1.0, 0.7, 1.0]
-fuzziness = 0.2
+material = "emissive"
+color = [1.0, 0.8, 0.6, 1.0]
+intensity = 2.0
 
 [[geometry]]
 type = "sphere"
@@ -2263,9 +2271,9 @@ refractive_index = 1.5
 type = "sphere"
 center = [1.8, 0.2, 7.3]
 radius = 0.2
-material = "metal"
-albedo = [0.6, 0.9, 0.8, 1.0]
-fuzziness = 0.1
+material = "emissive"
+color = [1.0, 0.6, 0.4, 1.0]
+intensity = 1.5
 
 [[geometry]]
 type = "sphere"
@@ -2311,8 +2319,9 @@ color = [0.7, 0.0, 0.3, 1.0]
 type = "sphere"
 center = [2.8, 0.2, -8.3]
 radius = 0.2
-material = "dielectric"
-refractive_index = 1.5
+material = "emissive"
+color = [1.0, 0.7, 0.5, 1.0]
+intensity = 1.8
 
 [[geometry]]
 type = "sphere"
@@ -2486,9 +2495,9 @@ color = [0.4, 0.4, 0.1, 1.0]
 type = "sphere"
 center = [3.6, 0.2, -8.1]
 radius = 0.2
-material = "metal"
-albedo = [0.9, 0.9, 0.6, 1.0]
-fuzziness = 0.2
+material = "emissive"
+color = [0.9, 0.9, 0.7, 1.0]
+intensity = 1.2
 
 [[geometry]]
 type = "sphere"
@@ -2922,9 +2931,9 @@ color = [0.6, 0.1, 0.1, 1.0]
 type = "sphere"
 center = [5.5, 0.2, 3.2]
 radius = 0.2
-material = "metal"
-albedo = [0.6, 0.8, 0.9, 1.0]
-fuzziness = 0.2
+material = "emissive"
+color = [1.0, 0.5, 0.3, 1.0]
+intensity = 2.2
 
 [[geometry]]
 type = "sphere"
@@ -2946,9 +2955,9 @@ color = [0.2, 0.3, 0.3, 1.0]
 type = "sphere"
 center = [5.4, 0.2, 6.4]
 radius = 0.2
-material = "metal"
-albedo = [0.8, 1.0, 0.6, 1.0]
-fuzziness = 0.0
+material = "emissive"
+color = [1.0, 0.8, 0.6, 1.0]
+intensity = 2.0
 
 [[geometry]]
 type = "sphere"
@@ -2986,9 +2995,9 @@ color = [0.1, 0.4, 0.4, 1.0]
 type = "sphere"
 center = [6.7, 0.2, -10.7]
 radius = 0.2
-material = "metal"
-albedo = [0.6, 0.9, 0.9, 1.0]
-fuzziness = 0.1
+material = "emissive"
+color = [1.0, 0.6, 0.4, 1.0]
+intensity = 1.5
 
 [[geometry]]
 type = "sphere"
@@ -3401,8 +3410,9 @@ color = [0.3, 0.2, 0.3, 1.0]
 type = "sphere"
 center = [8.8, 0.2, -2.2]
 radius = 0.2
-material = "dielectric"
-refractive_index = 1.5
+material = "emissive"
+color = [1.0, 0.7, 0.5, 1.0]
+intensity = 1.8
 
 [[geometry]]
 type = "sphere"
@@ -3456,9 +3466,9 @@ fuzziness = 0.4
 type = "sphere"
 center = [8.9, 0.2, 4.4]
 radius = 0.2
-material = "metal"
-albedo = [0.5, 0.5, 0.9, 1.0]
-fuzziness = 0.1
+material = "emissive"
+color = [0.9, 0.9, 0.7, 1.0]
+intensity = 1.2
 
 [[geometry]]
 type = "sphere"
@@ -3542,9 +3552,9 @@ refractive_index = 1.5
 type = "sphere"
 center = [9.3, 0.2, -6.2]
 radius = 0.2
-material = "metal"
-albedo = [0.7, 1.0, 0.6, 1.0]
-fuzziness = 0.1
+material = "emissive"
+color = [1.0, 0.5, 0.3, 1.0]
+intensity = 2.2
 
 [[geometry]]
 type = "sphere"
@@ -3693,9 +3703,9 @@ color = [0.2, 0.4, 0.6, 1.0]
 type = "sphere"
 center = [10.8, 0.2, -9.7]
 radius = 0.2
-material = "metal"
-albedo = [0.7, 0.8, 0.5, 1.0]
-fuzziness = 0.3
+material = "emissive"
+color = [1.0, 0.8, 0.6, 1.0]
+intensity = 2.0
 
 [[geometry]]
 type = "sphere"
@@ -3861,8 +3871,9 @@ color = [0.6, 0.5, 0.0, 1.0]
 type = "sphere"
 center = [0.0, 1.0, 0.0]
 radius = 1.0
-material = "dielectric"
-refractive_index = 1.5
+material = "emissive"
+color = [1.0, 1.0, 1.0, 1.0]
+intensity = 10.0
 
 [[geometry]]
 type = "sphere"

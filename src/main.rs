@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use crate::raytracer::environment::Environment;
 use crate::raytracer::loader::CameraSettings;
 use crate::raytracer::world::World;
@@ -10,6 +12,8 @@ mod raytracer;
 #[command(name = "raynaldo-reborn")]
 #[command(about = "A ray tracer with multiple backend options")]
 struct Args {
+    /// Path to the world configuration file
+    world: PathBuf,
     /// Tracer type to use for ray tracing
     #[arg(short, long, value_enum, default_value_t = TracerType::Embree)]
     tracer: TracerType,
@@ -35,7 +39,7 @@ fn main() {
         world: World,
     }
 
-    let world = std::fs::read_to_string("assets/worlds/dragon80k.toml").unwrap();
+    let world = std::fs::read_to_string(args.world).unwrap();
     let world: WorldConfig = toml::from_str(&world).unwrap();
 
     app::run(world.world, world.environment, world.camera, args.tracer);

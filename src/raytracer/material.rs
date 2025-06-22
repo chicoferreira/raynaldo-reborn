@@ -34,9 +34,9 @@ impl MaterialType {
         match self {
             MaterialType::Emissive { color, intensity } => {
                 if trace_result.front_face {
-                    Vec4::ZERO
-                } else {
                     *color * *intensity
+                } else {
+                    Vec4::ZERO
                 }
             }
             _ => Vec4::ZERO,
