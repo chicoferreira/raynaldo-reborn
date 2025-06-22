@@ -7,7 +7,7 @@ use glam::Vec3;
 impl AppState {
     pub fn prepare_egui(&mut self, window: &winit::window::Window) {
         self.egui_framework.prepare(&window, |egui_ctx| {
-            egui::Window::new("Hello, egui!").show(egui_ctx, |ui| {
+            egui::Window::new("Raynaldo").show(egui_ctx, |ui| {
                 ui.horizontal(|ui| {
                     ui.label("Camera position:");
                     if dragged_vec3(ui, &mut self.scene.camera.position, 0.01) {
