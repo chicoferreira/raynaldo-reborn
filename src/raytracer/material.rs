@@ -1,7 +1,9 @@
+use std::f32::consts::PI;
+
 use crate::raytracer::material::texture::Texture;
 use crate::raytracer::tracer::TraceResult;
 use crate::raytracer::world::Ray;
-use glam::{Vec3, Vec4};
+use glam::{Vec3, Vec4, vec3};
 use serde::{Deserialize, Serialize};
 
 pub struct ScatterResult {
@@ -46,11 +48,43 @@ impl MaterialType {
     pub fn scatter(&self, ray: &Ray, trace_result: &TraceResult) -> Option<ScatterResult> {
         match self {
             MaterialType::Lambertian { texture } => {
-                let scatter_direction = sample_cos_hemisphere(trace_result.normal);
+                let (scatter_direction, _) = sample_cosine_hemi_sphere();
+
+                // let cos_theta = scatter_direction.z;
+                let normal = trace_result.normal;
+
+                let rx = if normal.x.abs() > normal.y.abs() {
+                    vec3(-normal.z, 0.0, normal.x)
+                        / (normal.x * normal.x + normal.z * normal.z).sqrt()
+                } else {
+                    vec3(0.0, normal.z, -normal.y)
+                        / (normal.y * normal.y + normal.z * normal.z).sqrt()
+                };
+
+                let ry = normal.cross(rx);
+
+                let scatter_direction = {
+                    let x = scatter_direction.x * rx.x
+                        + scatter_direction.y * ry.x
+                        + scatter_direction.z * normal.x;
+                    let y = scatter_direction.x * rx.y
+                        + scatter_direction.y * ry.y
+                        + scatter_direction.z * normal.y;
+                    let z = scatter_direction.x * rx.z
+                        + scatter_direction.y * ry.z
+                        + scatter_direction.z * normal.z;
+                    vec3(x, y, z)
+                };
+
+                let diffuse_ray = Ray::new(trace_result.point, scatter_direction);
+                let kd = texture.sample(trace_result.uv);
+
+                // let attenuation = kd * cos_theta / pdf;
+                let attenuation = kd;
 
                 Some(ScatterResult {
-                    attenuation: texture.sample(trace_result.uv),
-                    scattered: Ray::new(trace_result.point, scatter_direction),
+                    attenuation: attenuation,
+                    scattered: diffuse_ray,
                 })
             }
             MaterialType::Metal { albedo, fuzziness } => {
@@ -116,32 +150,19 @@ fn random_unit_vector() -> Vec3 {
     }
 }
 
-fn sample_cos_hemisphere(normal: Vec3) -> Vec3 {
-    // Two random numbers in [0, 1)
-    let e1: f32 = rand::random();
-    let e2: f32 = rand::random();
+fn sample_cosine_hemi_sphere() -> (Vec3, f32) {
+    let r1: f32 = rand::random_range(0.0..1.0);
+    let r2: f32 = rand::random_range(0.0..1.0);
 
-    // Cosine-weighted sampling in local space (normal = (0, 0, 1))
-    let r = e1.sqrt(); // Radius on the unit disk
-    let phi = 2.0 * std::f32::consts::PI * e2; // Azimuthal angle
-    let x = r * phi.cos();
-    let y = r * phi.sin();
-    let z = (1.0 - e1).sqrt(); // Ensures unit length and cosine weighting
+    let cos_theta = r2.sqrt();
+    let z = cos_theta;
 
-    // Local direction
-    let local_dir = Vec3::new(x, y, z);
+    let x = (2.0 * PI * r1).sin() * (1.0 - r2).sqrt();
+    let y = (2.0 * PI * r1).cos() * (1.0 - r2).sqrt();
 
-    // Transform to world space using an orthonormal basis
-    let (u, v, w) = orthonormal_basis(normal);
-    u * local_dir.x + v * local_dir.y + w * local_dir.z
-}
+    let pdf = cos_theta / PI;
 
-fn orthonormal_basis(normal: Vec3) -> (Vec3, Vec3, Vec3) {
-    let w = normal; // Normal is already normalized
-    let a = if w.x.abs() > 0.9 { Vec3::Y } else { Vec3::X }; // Avoid parallel vectors
-    let v = w.cross(a).normalize();
-    let u = w.cross(v).normalize();
-    (u, v, w)
+    (Vec3::new(x, y, z), pdf)
 }
 
 pub mod texture {
