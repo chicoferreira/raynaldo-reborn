@@ -23,5 +23,3 @@ serde = { version = "1.0.219", features = ["derive"] }
 toml = "0.8.23"
 tobj = "4.0.3"
 anyhow = "1.0.98"
-serde_json = "1.0.140"
-

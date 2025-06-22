@@ -1,6 +1,7 @@
 use crate::app::gui_framework::EguiFramework;
 use crate::app::renderer::Renderer;
 use crate::raytracer::Scene;
+use crate::raytracer::environment::Environment;
 use crate::raytracer::loader::CameraSettings;
 use crate::raytracer::tonemap::Tonemapper;
 use crate::raytracer::world::World;
@@ -150,7 +151,12 @@ struct AppState {
     egui_framework: EguiFramework,
 }
 
-pub(crate) fn run(world: World, camera_settings: CameraSettings, tracer_type: crate::TracerType) {
+pub fn run(
+    world: World,
+    environment: Environment,
+    camera_settings: CameraSettings,
+    tracer_type: crate::TracerType,
+) {
     let app = winit_app::WinitApp::new(
         |event_loop| {
             event_loop
@@ -181,6 +187,7 @@ pub(crate) fn run(world: World, camera_settings: CameraSettings, tracer_type: cr
                 scene: Scene::new(
                     camera_settings.to_camera(renderer.width(), renderer.height(), 2.0),
                     world.clone(),
+                    environment,
                     tracer_type,
                 ),
                 last_fps_update: (Instant::now(), 0.0),

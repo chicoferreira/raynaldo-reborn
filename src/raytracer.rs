@@ -1,4 +1,5 @@
 pub mod camera;
+pub mod environment;
 pub mod light;
 pub mod loader;
 pub mod material;
@@ -7,6 +8,7 @@ pub mod tracer;
 pub mod world;
 
 use crate::raytracer::camera::Camera;
+use crate::raytracer::environment::Environment;
 use crate::raytracer::light::LightSampler;
 use crate::raytracer::tonemap::Tonemapper;
 use crate::raytracer::tracer::embree::EmbreeTracer;
@@ -21,10 +23,16 @@ pub struct Scene {
     pub world: World,
     pub light_sampler: LightSampler,
     pub tonemapper: Tonemapper,
+    pub environment: Environment,
 }
 
 impl Scene {
-    pub fn new(camera: Camera, world: World, tracer_type: crate::TracerType) -> Self {
+    pub fn new(
+        camera: Camera,
+        world: World,
+        environment: Environment,
+        tracer_type: crate::TracerType,
+    ) -> Self {
         let tracer = match tracer_type {
             crate::TracerType::Naive => {
                 tracer::Tracer::NaiveTracer(NaiveTracer::new(&world.geometry))
@@ -40,6 +48,7 @@ impl Scene {
             camera,
             tracer,
             world,
+            environment,
             tonemapper: Tonemapper::None,
             light_sampler,
         }
@@ -135,17 +144,11 @@ impl Scene {
                     break;
                 }
             } else {
-                final_color += throughput * self.get_environment_color(&ray);
+                final_color += throughput * self.environment.get_environment_color(&ray);
                 break;
             }
         }
 
         final_color
-    }
-
-    fn get_environment_color(&self, _ray: &Ray) -> Vec4 {
-        // let t = 0.5 * (ray.direction.normalize().y + 1.0);
-        // vec4(1.0, 1.0, 1.0, 1.0) * (1.0 - t) + vec4(0.5, 0.7, 1.0, 1.0) * t
-        Vec4::ZERO
     }
 }

@@ -1,3 +1,4 @@
+use crate::raytracer::environment::Environment;
 use crate::raytracer::loader::CameraSettings;
 use crate::raytracer::world::World;
 use clap::Parser;
@@ -25,15 +26,17 @@ enum TracerType {
 fn main() {
     let args = Args::parse();
 
-    #[derive(serde::Deserialize, serde::Serialize)]
+    #[derive(serde::Deserialize)]
     struct WorldConfig {
         camera: CameraSettings,
+        #[serde(default)]
+        environment: Environment,
         #[serde(flatten)]
         world: World,
     }
 
-    let world = std::fs::read_to_string("assets/worlds/cornell_box.toml").unwrap();
+    let world = std::fs::read_to_string("assets/worlds/dragon80k.toml").unwrap();
     let world: WorldConfig = toml::from_str(&world).unwrap();
 
-    app::run(world.world, world.camera, args.tracer);
+    app::run(world.world, world.environment, world.camera, args.tracer);
 }

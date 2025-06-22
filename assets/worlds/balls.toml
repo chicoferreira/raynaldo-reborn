@@ -6,7 +6,9 @@ fov = 60.0
 focus_distance = 10.0
 defocus_angle = 0.0
 
-[world]
+[environment]
+type = "sky"
+
 [[geometry]]
 type = "quad"
 origin = [-100.0, 0.0, -100.0]
