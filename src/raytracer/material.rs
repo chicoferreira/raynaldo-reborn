@@ -46,7 +46,7 @@ impl MaterialType {
     pub fn scatter(&self, ray: &Ray, trace_result: &TraceResult) -> Option<ScatterResult> {
         match self {
             MaterialType::Lambertian { texture } => {
-                let scatter_direction = cosine_weighted_hemisphere_sample(trace_result.normal);
+                let scatter_direction = sample_cos_hemisphere(trace_result.normal);
 
                 Some(ScatterResult {
                     attenuation: texture.sample(trace_result.uv),
@@ -116,28 +116,32 @@ fn random_unit_vector() -> Vec3 {
     }
 }
 
-fn cosine_weighted_hemisphere_sample(normal: Vec3) -> Vec3 {
-    // Generate cosine-weighted sample in local hemisphere coordinates
-    let u1: f32 = rand::random();
-    let u2: f32 = rand::random();
+fn sample_cos_hemisphere(normal: Vec3) -> Vec3 {
+    // Two random numbers in [0, 1)
+    let e1: f32 = rand::random();
+    let e2: f32 = rand::random();
 
-    let cos_theta = u1.sqrt();
-    let sin_theta = (1.0 - u1).sqrt();
-    let phi = 2.0 * std::f32::consts::PI * u2;
+    // Cosine-weighted sampling in local space (normal = (0, 0, 1))
+    let r = e1.sqrt(); // Radius on the unit disk
+    let phi = 2.0 * std::f32::consts::PI * e2; // Azimuthal angle
+    let x = r * phi.cos();
+    let y = r * phi.sin();
+    let z = (1.0 - e1).sqrt(); // Ensures unit length and cosine weighting
 
-    let local_direction = Vec3::new(sin_theta * phi.cos(), sin_theta * phi.sin(), cos_theta);
+    // Local direction
+    let local_dir = Vec3::new(x, y, z);
 
-    // Transform from local coordinates to world coordinates
-    let up = if normal.z.abs() > 0.9 {
-        Vec3::X
-    } else {
-        Vec3::Z
-    };
+    // Transform to world space using an orthonormal basis
+    let (u, v, w) = orthonormal_basis(normal);
+    u * local_dir.x + v * local_dir.y + w * local_dir.z
+}
 
-    let tangent = up.cross(normal).normalize();
-    let bitangent = normal.cross(tangent);
-
-    local_direction.x * tangent + local_direction.y * bitangent + local_direction.z * normal
+fn orthonormal_basis(normal: Vec3) -> (Vec3, Vec3, Vec3) {
+    let w = normal; // Normal is already normalized
+    let a = if w.x.abs() > 0.9 { Vec3::Y } else { Vec3::X }; // Avoid parallel vectors
+    let v = w.cross(a).normalize();
+    let u = w.cross(v).normalize();
+    (u, v, w)
 }
 
 pub mod texture {
