@@ -34,6 +34,8 @@ struct RenderState {
     total_rendered_pixel_samples: usize,
     /// The number of samples per pixel that have been rendered.
     rendered_samples: u32,
+    /// The total time it took to render the image
+    pub render_time: Duration,
 }
 
 impl RenderState {
@@ -61,6 +63,7 @@ impl RenderState {
             total_rendered_pixel_samples: 0,
             rendered_samples: 0,
             canvas,
+            render_time: Duration::default(),
         }
     }
 
@@ -95,6 +98,7 @@ impl RenderState {
             (self.current_pixel_render_order + 1) % self.pixel_render_orders.len();
         self.rendered_samples = 0;
         self.total_rendered_pixel_samples = 0;
+        self.render_time = Duration::from_secs(0);
     }
 
     fn progress(&self, samples_per_pixel: u32) -> f32 {
@@ -256,10 +260,12 @@ pub fn run(
 
             const PIXEL_BATCH_SIZE: usize = 10000;
 
+            let mut rendered = false;
             let instant = Instant::now();
             while !state.render_state.is_finished(state.samples_per_pixel)
                 && instant.elapsed() < Duration::from_millis(state.time_budget_ms)
             {
+                rendered = true;
                 #[derive(Copy, Clone)]
                 struct BufferWrapper(*mut (f32, f32, f32, u32));
 
@@ -307,6 +313,10 @@ pub fn run(
                     state.render_state.rendered_samples += 1;
                     // TODO: change the pixel render order
                 }
+            }
+
+            if rendered {
+                state.render_state.render_time += instant.elapsed();
             }
 
             let canvas_bytes = state.render_state.prepare_to_gpu(&state.scene.tonemapper);

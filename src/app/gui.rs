@@ -103,6 +103,11 @@ impl AppState {
                     );
                 });
 
+                ui.horizontal(|ui| {
+                    ui.label("Render time:");
+                    ui.label(format!("{:?}", self.render_state.render_time));
+                });
+
                 let tonemapper = &mut self.scene.tonemapper;
 
                 ui.horizontal(|ui| {
