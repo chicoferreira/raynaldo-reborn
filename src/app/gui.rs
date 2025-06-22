@@ -1,4 +1,5 @@
 use crate::app::AppState;
+use crate::raytracer::tonemap::Tonemapper;
 use egui::Ui;
 use egui::emath::Numeric;
 use glam::Vec3;
@@ -101,6 +102,20 @@ impl AppState {
                             .desired_width(150.0),
                     );
                 });
+
+                let tonemapper = &mut self.scene.tonemapper;
+
+                ui.horizontal(|ui| {
+                    ui.label("Tonemapper:");
+                    egui::ComboBox::from_label("")
+                        .selected_text(format!("{}", tonemapper.name()))
+                        .show_ui(ui, |ui| {
+                            Tonemapper::all().iter().for_each(|tm| {
+                                ui.selectable_value(tonemapper, *tm, tm.name());
+                            });
+                        });
+                });
+
                 ui.horizontal(|ui| {
                     ui.label("Frame rate:");
                     ui.label(format!("{:.2} fps", self.last_fps_update.1));

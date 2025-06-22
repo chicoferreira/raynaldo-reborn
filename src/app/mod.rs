@@ -2,6 +2,7 @@ use crate::app::gui_framework::EguiFramework;
 use crate::app::renderer::Renderer;
 use crate::raytracer::Scene;
 use crate::raytracer::loader::CameraSettings;
+use crate::raytracer::tonemap::Tonemapper;
 use crate::raytracer::world::World;
 use pollster::FutureExt;
 use rand::prelude::SliceRandom;
@@ -100,13 +101,21 @@ impl RenderState {
             / self.total_pixels_to_render(samples_per_pixel) as f32
     }
 
-    fn to_bytes(&self) -> Vec<u8> {
+    fn prepare_to_gpu(&self, tonemapper: &Tonemapper) -> Vec<u8> {
         let mut bytes = Vec::with_capacity(self.canvas.len() * 4);
         for (r_sum, g_sum, b_sum, sample_count) in &self.canvas {
             if *sample_count > 0 {
-                let r = ((r_sum / *sample_count as f32) * 255.0).clamp(0.0, 255.0) as u8;
-                let g = ((g_sum / *sample_count as f32) * 255.0).clamp(0.0, 255.0) as u8;
-                let b = ((b_sum / *sample_count as f32) * 255.0).clamp(0.0, 255.0) as u8;
+                let r = r_sum / *sample_count as f32;
+                let g = g_sum / *sample_count as f32;
+                let b = b_sum / *sample_count as f32;
+
+                let color = glam::Vec3::new(r, g, b);
+                let color = tonemapper.apply(color);
+                let color = color * 255.0;
+
+                let r = color.x.clamp(0.0, 255.0) as u8;
+                let g = color.y.clamp(0.0, 255.0) as u8;
+                let b = color.z.clamp(0.0, 255.0) as u8;
                 let a = 255u8;
                 bytes.extend_from_slice(&[r, g, b, a]);
             } else {
@@ -293,7 +302,7 @@ pub(crate) fn run(world: World, camera_settings: CameraSettings, tracer_type: cr
                 }
             }
 
-            let canvas_bytes = state.render_state.to_bytes();
+            let canvas_bytes = state.render_state.prepare_to_gpu(&state.scene.tonemapper);
             state
                 .renderer
                 .render_with(&canvas_bytes, |renderer, encoder, view| {

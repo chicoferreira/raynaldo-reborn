@@ -2,11 +2,13 @@ pub mod camera;
 pub mod light;
 pub mod loader;
 pub mod material;
+pub mod tonemap;
 pub mod tracer;
 pub mod world;
 
 use crate::raytracer::camera::Camera;
 use crate::raytracer::light::LightSampler;
+use crate::raytracer::tonemap::Tonemapper;
 use crate::raytracer::tracer::embree::EmbreeTracer;
 use crate::raytracer::tracer::naive::NaiveTracer;
 use crate::raytracer::world::{Ray, World};
@@ -18,6 +20,7 @@ pub struct Scene {
     pub tracer: tracer::Tracer,
     pub world: World,
     pub light_sampler: LightSampler,
+    pub tonemapper: Tonemapper,
 }
 
 impl Scene {
@@ -37,6 +40,7 @@ impl Scene {
             camera,
             tracer,
             world,
+            tonemapper: Tonemapper::None,
             light_sampler,
         }
     }
