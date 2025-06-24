@@ -32,7 +32,7 @@
   - *_Egui_*
   - *_Embree_ (_Intel_)*
 
-  Segurança, _performance_, controlo sobre a _pipeline_ de renderização, _APIs_ modernas
+  Familiariade com a linguagem e tecnologias
 ]
 
 #slide(title: [Funcionalidades Implementadas])[
@@ -50,7 +50,7 @@
   - *_Winit_*: Sistema de janelas e eventos
   - *_WGPU_*: _Renderer_ na _GPU_ (_Vulkan_/_Metal_/_DirectX_ 12)
   - *_Egui_*: _Interface_ gráfica de modo imediato
-  - *_Renderer_*: _Output_ do _raytracer_
+  - *_Renderer_*: _Output_ do _pathtracer_
 ]
 
 #slide(title: [Sistema de Renderização Progressiva e Paralela])[
@@ -58,9 +58,12 @@
   struct RenderState {
     canvas: AccumulationCanvas, // (r_sum, g_sum, b_sum, sample_count)
     current_render_pixel: usize,
+    current_order: usize,
     pixel_orders: [Vec<usize>; 5], // Ordem aleatória de renderização
   }
   ```
+
+  `pixel_orders = [2, 5, 7, 1, 3, ...]`
 
   - Renderização em lotes de 10.000 píxeis
   - Processamento paralelo via *_Rayon_*
@@ -74,6 +77,7 @@
   while !state.render_state.is_finished(state.samples_per_pixel)
       && instant.elapsed() < Duration::from_millis(state.time_budget_ms)
   {
+      let end = state.render_state.current_render_pixel + PIXEL_BATCH_SIZE;
       // Processamento paralelo de lote de pixels
       state.render_state.get_current_pixel_order()
           [state.render_state.current_render_pixel..end]
@@ -119,7 +123,7 @@
       *Controlo da Câmara (_FPV_):*
       - _WASD_: movimento horizontal e frontal
       - Espaço/_Shift_: subir/descer
-      - _Mouse_: rotação _yaw_/_pitch_
+      - Rotação _yaw_/_pitch_
 
       *_Interface_ _Egui_:*
       - Posição e orientação da câmara
@@ -157,10 +161,10 @@
 #slide(title: [Tipos de Geometria Suportados])[
   - *Esferas*: _center_ + _radius_
   - *_Quads_*: _origin_ + vetores u, v
-  - *Malhas de Triângulos*: ficheiros _OBJ_ ou definição implícita
+  - *_Meshes_ de Triângulos*: ficheiros _OBJ_ ou definição implícita
   - *Caixas Orientadas*: _origin_ + vetores u, v, w
 
-  Deserialização automática via *_Serde_*
+  Carregamento e deserialização automática via *_Serde_*
 ]
 
 #slide(title: [Sistema de Materiais])[
@@ -241,10 +245,10 @@
 
 #slide(title: [Conclusão])[
   *Objetivos Alcançados:*
-  - _Pathtracer_ funcional e eficiente em _Rust_
+  - _Pathtracer_ funcional e eficiente
   - _Interface_ interativa com renderização progressiva
-  - Sistema completo de materiais e geometrias
-  - Aceleração significativa com _BVH_
+  - Sistema de materiais e geometrias
+  - Aceleração significativa com _BVH_ via _Embree_
 
   *Trabalho Futuro:*
   - Suporte completo para materiais _OBJ_
